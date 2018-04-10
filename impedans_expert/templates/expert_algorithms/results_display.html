@@ -1,0 +1,57 @@
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_filters %}
+
+{% block main_content %}
+<div class="details_card_size">
+	<div class="card">
+		<a data-toggle="collapse" href="#result_form_1" aria-expanded="true" aria-controls="test-block">
+			<h2 class="card-header">Results Selection By Run</h2>
+		</a>
+		<div class="collapse" id="result_form_1">
+			<div class="algorithm_select_card_body">
+				<form class="form-horizontal" id="result_form" action="" method="post" enctype="multipart/form-data">
+					{% csrf_token %}
+					{{ run_form|crispy }}
+					<button type="submit" class="btn btn-primary">Submit</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+{% comment %}
+<div class="details_card_size">
+	<div class="card">
+		<a data-toggle="collapse" href="#result_form_2" aria-expanded="true" aria-controls="test-block">
+			<h2 class="card-header">Advanced Results Selection</h2>
+		</a>
+		<div class="collapse" id="result_form_2">
+			<div class="algorithm_select_card_body">
+				<form class="form-horizontal" id="result_form" action="" method="post" enctype="multipart/form-data">
+					{% csrf_token %}
+					{{ form|crispy }}
+					<button type="submit" class="btn btn-primary">Submit</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+{% endcomment %}
+
+<div class="graph_display" id="graph_display"></div>
+
+<script>
+	var advanced_select = {{ advanced_select }}
+	var algorithm_id = {{ algorithm }}
+	{% if mode %}
+		var mode = {{ mode }}
+	{% endif %}
+	var customer = {{ customer }}
+	var algorithm_run_valid_id = {{ algorithm_run_id }}
+	var parameter = {{ parameter }}
+	{% if chamber %}
+		var chamber = {{ chamber }}
+	{% endif %}	
+</script>
+
+{% endblock %}

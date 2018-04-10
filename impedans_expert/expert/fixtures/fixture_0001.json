@@ -1,0 +1,26 @@
+[
+ {
+  "model": "expert.sensortype",
+  "pk": 1,
+  "fields":
+  {
+   "sensor_type": "Octiv Mono"
+  }
+ },
+ {
+  "model": "expert.sensortype",
+  "pk": 2,
+  "fields":
+  {
+   "sensor_type": "Octiv Poly"
+  }
+ },
+ {
+  "model": "expert.sensortype",
+  "pk": 3,
+  "fields":
+  {
+   "sensor_type": "Octiv Suite"
+  }
+ }
+]

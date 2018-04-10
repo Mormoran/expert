@@ -1,0 +1,193 @@
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+Chamber: {{chamber.chamber_name}}
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.css">
+{% endblock %}
+
+
+{% block main_content %}
+<div id="editCustomParam" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<form class="form-horizontal" method="POST" enctype="multipart/form-data">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3>Edit Parameter Name</h3>
+				</div>
+				<div class="modal-body">
+					{% csrf_token %}
+					{{ custom_param_form|crispy }}
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-primary submit_parameter" data-dismiss="modal">Submit</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+<br>
+<br>
+<div class="row">
+	<div class="col-lg-3 offset-md-1">
+		<br>
+		<h4>Sensor: {{sensor.name}}</h4>
+		<h4>Serial Number: {{sensor.serial_number}}</h4>
+		<h4>Sensor Type: {{sensor.sensor_type}}</h4>
+		<h4>Chamber: {{chamber}}</h4>
+		<h4>Access Key: [ACCESS KEY HERE]</h4>
+	</div>
+	<div class="col-lg-5 offset-md-1">
+		<div >
+			<h6 class="card-header bg-danger text-white text-center banner">
+				Parameters
+			</h6>
+			<div class="card-body p-0 text-center mx-auto">
+				<table id="liveTable" class="table display compact" cellspacing="0" cellpadding="0">
+					<thead>
+						<tr class="table-active">
+							<th>Parameter</th>
+							<th>Custom Name</th>
+							<th>Value</th>
+						</tr>
+					</thead>
+					<tfoot id="footerSearch">
+						<tr>
+							<th>Parameter</th>
+							<th>Custom Name</th>
+							<th>Value</th>
+						</tr>
+					</tfoot>
+					{% comment %}
+					<tbody>
+						{% for parameter in sensor_parameters %}
+							<tr class="text-left">
+								<td><span>{{parameter.parameter.parameter_name}}</span></td>
+								<td class="text-center">
+                                    <span>{{parameter.parameter_name_userdef}}</span>
+                                    <span class="floatButton">
+                                        <i class="far fa-edit" id="edit-property-{{parameter.id}}" data-id="{{parameter.id}}" data-toggle="modal" data-target="#editCustomParam"></i>
+                                    </span>
+								</td>
+								<td class="text-center"><span>{{parameter.live_value|floatformat:-2}}</span></td>
+							</tr>
+						{% endfor %}
+					</tbody>
+					{% endcomment %}
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block end_scripts %}
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script src="{% static 'js/filter.js' %}"></script>
+<script>
+	$(document).ready(function() {
+		$('#editCustomParam').on('show.bs.modal', function (event) {				// Watch DOM events for modal window generation
+			var button = $(event.relatedTarget)										// Capture the button that triggered the modal
+
+			getParameterId = function() {
+				var sensor_parameter_id = button.data('id')							// Extract the parameter.id from data-id attribute of the button
+				return sensor_parameter_id;
+			};
+
+			var previous_parameter = button.parent().parent().text().trim();		// Capture the existing parameter name to pre-fill the input field
+			$("#id_parameter_name_userdef").val(previous_parameter);				// Fill in the name input field with the existing parameter name
+
+			var inputElements = $('#id_parameter_name_userdef')						// Capture all input elements in a form
+
+			inputElements.keyup(function() {										// Detect any typing changes on either input field
+				var empty = false;													// Initialise a false flag, assumes there's inputs in the input fields
+				inputElements.each(function() {										// Watch each input field for text changes
+					if ($(this).val().length == 0) {								// If all text in the input field is delete, set empty flag to true
+						empty = true;
+					};
+				});
+
+				if (empty) {														// If the empty flag is true, disable the submit button until both input fields contain text
+					$('.submit_parameter').attr('disabled', 'disabled');
+				} else {															// If both input fields contain text, enable the submit button
+					$('.submit_parameter').removeAttr('disabled');
+				};
+			});
+
+			$('.submit_parameter').click(function() {
+				event.preventDefault()
+				var sensor_id = '{{sensor.id}}'
+				var parameter_userdef = $("#id_parameter_name_userdef").val();		// Extract the new parameter name string that was input by the user
+				$.post("{% url 'sensor' sensor.id %}", {							// POST request to the chamber view
+					csrfmiddlewaretoken: '{{csrf_token}}',
+					sensor_id: sensor_id,
+					sensor_parameter_id: getParameterId(),
+					parameter_name_userdef: parameter_userdef,
+				}, function(data) {
+					location.reload();												// After the POST request is sent and acknowledged, reload the page to reflect changes
+				}).done();
+			});
+		});
+
+		///////////////////////////////////////////////////////////////////////////////////////////////////////
+		//								Live Sensor Parameter Values Table									 //
+		///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		// Setup - add a text input to each footer cell
+		// to allow us to filter by column separately
+		$('#liveTable tfoot th').each( function () {
+			var title = $(this).text();
+			$(this).html( '<input type="text" class="filterInput"/>' );
+		} );
+	
+		// Define DataTable and additional properties
+		var table = $('#liveTable').DataTable({
+			ajax: {url: "{% url 'live_values' sensor.id %}",
+				dataSrc: ''
+			},
+			"columns": [
+						{
+						"data": "Parameter",
+							
+						},
+						{
+						"data": "Custom Name",
+							
+						},
+						{
+						"data": "Value",
+							
+						}
+					],
+			"lengthMenu": [ [15, 30, 45, 60, -1], [15, 30, 45, 60, "All"] ],
+			"orderMulti": true,
+			"stateSave": true,
+			"pagingType": "full_numbers",
+			"autoWidth": false,
+			"pageLength": 15,
+			"dom": '<<i><l><p>rt>'
+		});
+
+		setInterval( function () {
+			table.ajax.reload( null, false ); // User paging is not reset on reload
+		}, 1000 );
+	
+		// Apply the search function on search box Input
+		// Redraw the table on match
+		table.columns().every( function () {
+			var that = this;
+			$( 'input', this.footer() ).on( 'keyup change', function () {
+				if ( that.search() !== this.value ) {
+					that.search( this.value ).draw();
+				}
+			} );
+		} );
+	});
+</script>
+{% endblock %}

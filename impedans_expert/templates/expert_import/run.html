@@ -1,0 +1,404 @@
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+Run
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.css">
+{% endblock %}
+
+{% block main_content %}
+
+<div id="addValue" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<form class="form-horizontal" id="chamber-form" action="" method="post" enctype="multipart/form-data">
+			{% csrf_token %}
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3 id="valueModalTitle">Run Value</h3>
+				</div>
+				<div class="modal-body">
+					{{ run_value_form|crispy }}
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary submit_property" id="value_submit" data-dismiss="modal">Submit</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div id="editProp" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<form class="form-horizontal" method="POST" enctype="multipart/form-data">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3>Edit Property Name</h3>
+				</div>
+				<div class="modal-body">
+					{% csrf_token %}
+					{{ run_property_form|crispy }}
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-primary submit_property" id="property_submit" data-dismiss="modal">Submit</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div id="delProp" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<form class="form-horizontal" method="POST" enctype="multipart/form-data">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3>Delete Property</h3>
+				</div>
+				<div class="modal-body text-center">
+					<h6>Are you sure you want to delete this property?</h6>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-primary submit_property" id="property_submit" data-dismiss="modal">Delete</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-lg-3">
+		<div class="text-center mx-auto">
+			<p>Date: {{run.start_time}}</p>
+			<p>Chamber: {{run.chamber}}</p>
+			<p>Length: {{run_length}}</p>
+		</div>
+		<br>
+		<div class="card">
+			<h6 class="card-header bg-danger text-white text-center banner">
+				Run Properties
+			</h6>
+			<div class="card-body p-0 text-center mx-auto">
+				<table id="miniTableProp" class="table table-striped compact" cellspacing="0" cellpadding="0">
+					<thead>
+						<tr class="table-active">
+							<th>Property</th>
+							<th>Value</th>
+						</tr>
+					</thead>
+					<tfoot id="footerSearch">
+						<tr>
+							<th>Property</th>
+							<th>Value</th>
+						</tr>
+					</tfoot>
+					<tbody>
+						{% for property in run_properties %}
+							<tr>
+								<td><span>{{property.property_name}}</span></td>
+								<td>
+                                    <span>{{property.property_value}}</span>
+                                    <span class="floatButton">
+                                        <i class="far fa-edit" id="edit-property-{{property.id}}" data-id="{{property.id}}-property" data-toggle="modal" data-target="#editProp" title="Edit Property Name"></i>
+                                        <i class="far fa-trash-alt" id="{{property.id}}" data-id="{{property.id}}-delete-property" data-toggle="modal" data-target="#delProp" title="Delete Property"></i>
+                                    </span>
+                                </td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			<div class="card-block p-1 text-center mx-auto">
+					<button class="btn btn-secondary banner new-obj-button" id="add-property-to-recipe-{{run.id}}" data-id="property" data-toggle="modal" data-target="#editProp">Add Property</button>
+			</div>
+		</div>
+		<br>
+		<div class="card">
+			<h6 class="card-header bg-danger text-white text-center banner">
+				Run Values
+			</h6>
+			<div class="card-body p-0 text-center mx-auto">
+				<table id="miniTableVal" class="table table-striped compact" cellspacing="0" cellpadding="0">
+					<thead>
+						<tr class="table-active">
+							<th>Property</th>
+							<th>Value</th>
+						</tr>
+					</thead>
+					<tfoot id="footerSearch">
+						<tr>
+							<th>Property</th>
+							<th>Value</th>
+						</tr>
+					</tfoot>
+					<tbody>
+						{% for value in run_values %}
+							<tr>
+								<td><span>{{value.run_parameter.parameter}}</span></td>
+								<td>
+                                    <span>{{value.value}}</span>
+                                    <span class="floatButton">
+                                        <i class="far fa-edit" id="edit-value-{{value.id}}" data-id="{{value.id}}-value" data-toggle="modal" data-target="#addValue" title="Edit Value Name"></i>
+                                        <i class="far fa-trash-alt" id="{{value.id}}" data-id="{{value.id}}-delete-value" data-toggle="modal" data-target="#delProp" title="Delete Value"></i>
+                                    </span>
+                                </td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			<div class="card-block p-1 text-center mx-auto">
+				<button class="btn btn-secondary banner new-obj-button" id="add-value-to-recipe-{{run.id}}" data-id="value" data-toggle="modal" data-target="#addValue">Add Value</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-lg-7">
+		<h6 class="card-header bg-danger text-white text-center banner">
+			Run Values
+		</h6>
+		<div class="card-body p-2 text-center mx-auto" >
+			<div id="graphContainer" style="width: 100%; height:750px;"></div>
+		</div>
+	</div>
+
+	<div class="col-lg-2">
+		<div class="card">
+			<h6 class="card-header bg-danger text-white text-center banner">
+				Run Parameters
+			</h6>
+			{{sensor}}
+			<div class="card-body p-0 text-center mx-auto">
+				<table id="miniTableParam" class="table table-striped compact" cellspacing="0" cellpadding="0">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Parameter</th>
+							</tr>
+						</thead>
+						<tfoot>
+							<tr>
+								<th class="hide"></th>
+								<th>Parameter</th>
+							</tr>
+						</tfoot>
+						<tbody>
+							{% for param in sensor_parameters %}
+								<tr id="choices">
+									<td><input data-parameter_id="{{param.id}}" data-time="{{run.start_time}};{{run.end_time}}" data-sensor_id="{{param.sensor.id}}" type="checkbox"></td>
+									<td>{{param.parameter_name_userdef}}</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+
+{% block end_scripts %}
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script src="{% static 'scripts/flot/jquery.flot.js' %}"></script>
+<script src="{% static 'scripts/flot/jquery.flot.time.js' %}"></script>
+<script src="{% static 'scripts/flot/jquery.flot.navigate.js' %}"></script>
+<script src="{% static 'scripts/flot/jquery.flot.downsample.js' %}"></script>
+<script src="{% static 'js/mini_filter.js' %}"></script>
+<script>
+	//$(document).ready(function() {
+	window.onload = (function(){
+		$('.hide input').hide();
+		$('.hideMe').hide();
+
+		$("#addValue, #editProp, #delProp").on("show.bs.modal", function (event) {		// Watch DOM events for modal window event
+			var button = $(event.relatedTarget)											// Capture the button that triggered the modal
+
+			if (button.attr("id").startsWith("edit-value")) {
+				$("#div_id_run_parameter").hide();
+				// TODO: Change modal title in case of Add/Edit by targetting title ID
+			};
+
+			getOperation = function() {
+				var operation = button.data("id")										// Extract the operation type or element ID from data-id attribute of the button
+				return operation;
+			};
+
+			if (getOperation() == "property") {											// If the clicked button is for a new property, reset the input fields to empty values
+				$("#id_property_name").val("");
+                $("#id_property_value").val("");
+			} else {
+				var previous_property = button.parent().parent().prev().text(); 		// Capture the existing property name to pre-fill the input field
+				$("#id_property_name").val(previous_property); 							// Fill in the name input field with the existing property name
+
+				var previous_value = button.parent().prev().text(); 					// Capture the existing property value to pre-fill the input field
+				$("#id_property_value, #id_value").val(previous_value);					// Fill in the value input field with the existing property value
+            };
+
+			var inputElements = $("#id_property_name, #id_property_value")				// Capture all input elements in a form
+
+		 	inputElements.keyup(function() {                                            // Detect any typing changes on either input field
+				var empty = false;                                                      // Initialise a false flag, assumes there's inputs in the input fields
+				inputElements.each(function() {                                         // Watch each input field for text changes
+					if ($(this).val().length == 0) {                                    // If all text in the input field is delete, set empty flag to true
+						empty = true;
+					};
+				});
+
+				if (empty) {                                                            // If the empty flag is true, disable the submit button until both input fields contain text
+					$(".submit_property").attr("disabled", "disabled");
+				} else {                                                                // If both input fields contain text, enable the submit button
+					$(".submit_property").removeAttr("disabled");
+				};
+			});
+
+			$(".submit_property").click(function() {
+				event.preventDefault()
+				event_id = $(this).attr('id')
+				
+				if (event_id == "property_submit") {
+                    var operation = getOperation()
+                    var parameter_1 = $("#id_property_name").val();                     // Extract the new property name string that was input by the user
+                    var parameter_2 = $("#id_property_value").val();                    // Extract the new property value string that was input by the user
+                } else {
+                    var operation = getOperation()
+                    var parameter_1 = $("#id_run_parameter").val();                     // Extract the sensor type that was selected by the user
+                    var parameter_2 = $("#id_value").val();                       		// Extract the sensor type that was selected by the user
+                }
+
+				var run_id = '{{run.id}}'
+
+				$.post("{% url 'expert_import:run' run.id %}", {						// POST request to the run view
+					csrfmiddlewaretoken: "{{csrf_token}}",
+					run_id: run_id,
+					operation: operation,
+					parameter_1: parameter_1,
+					parameter_2: parameter_2
+				}, function(data) {
+					location.reload();													// After the POST request is sent and acknowledged, reload the page to reflect changes
+				}).done();
+			});
+		});
+
+		// Draw graph
+
+		var getParameterData = async function(parameter_id, sensor_id, start_time, end_time) {
+			var dataURL = "/expert/api/data/?id=&ordering=time&sensor_parameter=" + parameter_id + "&parameter_value=" + "&time=&time__gte=" + start_time + "&time__lte=" + end_time + "&format=json"
+			var data = await Promise.resolve($.getJSON(dataURL));
+
+			var data_array = [];
+			var data_dict = {};
+
+			for (i = 0; i < data.length; i++) {
+				var time = new Date(data[i].time);
+				var unixTime = time.getTime();
+				data[i].time = unixTime;
+
+				data_array.push([
+					data[i].time,
+					data[i].parameter_value
+				]);
+			};
+
+			data_dict['label'] = data[0].sensor_parameter;
+            data_dict['data'] = data_array;
+
+            return data_dict;
+		};
+
+		// Retrieve checkboxes 
+		var choiceContainer = $("#miniTableParam");
+
+		//choiceContainer.find("input").click(plotAccordingToChoices);
+		choiceContainer.on("click", "input", plotAccordingToChoices);
+
+		function plotAccordingToChoices() {
+
+			var array = [];
+
+			choiceContainer.find("input:checked").each(function () {
+				
+				var parameter_id = $(this).data("parameter_id");
+				var sensor_id = $(this).data("sensor_id");
+				var start_time = $(this).data("time").split(";")[0]
+				var end_time = $(this).data("time").split(";")[1]
+
+				getParameterData(parameter_id, sensor_id, start_time, end_time).then(function(data_array) {
+					array.push(data_array);
+					graphParameters(array);
+				});
+			});
+
+			var graphParameters = function(data) {
+				if (data.length > 0) {
+					$.plot("#graphContainer", data, {
+                        yaxis: {
+                            
+                        },
+                        xaxis: {
+                            mode: "time",
+							timezone: "browser"
+                        },
+                        series: {
+                            lines: {
+                                show: true,
+                                steps: false
+                            },
+                            points: {
+                                show: false
+							},
+							downsample: {
+								threshold: 1000
+							}
+                        },
+                        grid: {
+                            hoverable: true,
+                            clickable: true
+                        },
+						zoom: {
+							interactive: true
+						},
+						pan: {
+							interactive: true
+						}
+                    });
+				};
+			};
+
+			$("<div id='tooltip'></div>").css({
+                position: "absolute",
+                display: "none",
+                border: "1px solid #fdd",
+                padding: "2px",
+                "background-color": "#fee",
+                opacity: 0.80
+            }).appendTo("body");
+
+            $("#graphContainer").bind("plothover", function (event, pos, item) {
+                if (item) {
+                    var x = item.datapoint[0].toFixed(2);
+                    var y = item.datapoint[1].toFixed(2);
+
+                    var parsedDate = new Date(parseInt(x, 10));
+                    var dateString = parsedDate.toString('MM/dd/yy HH:mm:ss');
+
+                    $("#tooltip").html(item.series.label + " at " + dateString + " = " + y)
+                        .css({top: item.pageY+5, left: item.pageX+5})
+                        .fadeIn(200);
+                } else {
+                    $("#tooltip").hide();
+                }
+            });
+		}
+
+		plotAccordingToChoices();
+
+	});
+</script>
+{% endblock %}

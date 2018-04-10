@@ -1,0 +1,341 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+import os
+import json
+
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import UserCreationForm
+from django.shortcuts import render, redirect, render_to_response
+from django.http import HttpResponseRedirect, HttpResponse, Http404, JsonResponse, HttpResponseNotFound
+
+from django.core import serializers
+from django.views import generic
+from django.core.management.base import BaseCommand
+
+from impedans_expert.expert.models import *
+from impedans_expert.expert.forms import *
+from impedans_expert.expert_upload.models import *
+from impedans_expert.users.models import User
+from django.conf import settings
+from django.forms import formset_factory
+from django.views.generic.edit import CreateView, UpdateView, DeleteView, View
+from django.shortcuts import get_object_or_404
+
+from django_fine_uploader.views import FineUploaderView
+from django_fine_uploader.forms import FineUploaderUploadForm
+from django_fine_uploader import urls as uploader_urls
+
+from rest_framework.views import APIView
+
+from rest_framework.generics import ListAPIView
+
+from impedans_expert.expert.models import *
+from impedans_expert.expert.forms import *
+from impedans_expert.expert_upload.models import *
+from impedans_expert.users.models import User
+
+#from Expert_Data import Data
+
+# users must be created by a admin user through the admin page
+"""
+# Create your views here.
+def signup(request):
+    if request.method == "POST" :
+        form = SignUpForm(request.POST)
+        if form.is_valid() :
+            user_name = request.POST['username']
+            first_name = request.POST['first_name']
+            last_name = request.POST['last_name']
+            email = request.POST['email']
+            password = request.POST['password1']
+            user = User.objects.create_user(username=user_name, email=email, password=password, first_name=first_name, last_name=last_name)
+
+            username = form.cleaned_data.get('username')
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=raw_password)
+            login(request, user)
+
+            company_name = request.POST['company_name']
+            contact_name = first_name + " " + last_name
+            customer = Customer.objects.create(company_name=company_name, contact_name=contact_name, contact_email=email, user=user)
+
+            return redirect('details')
+    else:
+        form = SignUpForm()
+    return render(request, 'registration/signup.html', {'form': form})
+"""
+
+def chamberCreate(request):
+    properties_form_set = formset_factory(ChamberPropertiesForm)
+    if request.method == "POST" :
+        chamber_form = ChamberForm(request.POST)
+        properties_formset = properties_form_set(request.POST)
+        if request.user.is_authenticated :
+            if chamber_form.is_valid() and properties_formset.is_valid():
+                chamber_name = request.POST['chamber_name']
+                chamber_type = request.POST['chamber_type']
+                customer = Customer.objects.get(user=request.user)
+                chamber = Chamber.objects.create(chamber_name=chamber_name, chamber_type=chamber_type, customer=customer)
+
+                for f in properties_formset :
+                    p_form = f.cleaned_data
+                    property_name = p_form.get('property_name')
+                    property_value = p_form.get('property_value')
+                    chamber_property = ChamberProperties.objects.create(property_name=property_name, property_value=property_value, chamber=chamber)
+
+                return redirect('chamber_list')
+    else:
+        chamber_form = ChamberForm()
+        properties_formset = properties_form_set()
+    return render(request, 'expert/chamber_form.html', {'chamber_form': chamber_form, 'properties_formset': properties_formset})
+
+
+class DetailsView(ListAPIView):
+    model = Customer
+    template_name = 'expert/details.html'
+
+    def get(self, request):
+        user = User.objects.get(username=request.user)
+        cust = Customer.objects.get(user=user)
+        files = FileUploadModel.objects.filter(customer=cust)
+        chambers = Chamber.objects.filter(customer=cust)
+        runs = Runs.objects.filter(chamber__in=chambers)
+        runs = list(runs)
+        sensors = Sensor.objects.filter(chamber_id__in=chambers)
+        data = Data.objects.filter(sensor_id__in=sensors)
+        parameters = Parameter.objects.all()
+        return render(request, self.template_name, {'chambers': chambers, 'files': files, 'runs': runs, 'sensors': sensors, 'data': data, 'parameters': parameters})
+
+
+class CustomerView(generic.DetailView):
+    model = Customer
+    template_name = 'expert/customer.html'
+
+    def get(self, request) :
+        cust = Customer.objects.get(user=request.user)
+        return render(request, self.template_name, {'customer': cust})
+
+class ProfileView(generic.DetailView):
+    model = Customer
+    template_name = 'pages/profile.html'
+
+    def get(self, request) :
+        cust = Customer.objects.get(user=request.user)
+        return render(request, self.template_name, {'customer': cust})
+
+class ChamberInfoView(generic.DetailView):
+    model = Chamber
+    template_name = 'expert/chamber.html'
+
+    def get(self, request, chamber_id) :
+        chamber = Chamber.objects.get(pk=chamber_id)
+        chamber_properties_form = ChamberPropertiesForm()
+        marker_form = MarkerForm()
+        return render(request, self.template_name, { 'chamber': chamber, 'chamber_property_form':chamber_properties_form, 'marker_form':marker_form })
+
+    def post(self, request, *args, **kwargs) :
+        print("-----------------POSTING------------------")
+        if request.user.is_authenticated:
+            #get button id
+            button = request.POST.get("button")
+
+            if "remove" in button :
+                split_str = button.split("_")
+                r_id_str = split_str[2]
+                r_id = int(r_id_str)
+                if "property" in button :
+                    rp = ChamberProperties.objects.get(pk=r_id)
+                    rp.delete()
+                else:
+                    rm = Marker.objects.get(pk=r_id)
+                    rm.delete()
+
+            elif "property_submit" in button :
+                property_id = int(request.POST.get("property_id"))
+                property_name = request.POST.get("property_name")
+                property_value = request.POST.get("property_value")
+
+                if property_id == 0:
+                    chamber_id = int(request.POST.get("chamber_id"))
+                    ChamberProperties.objects.create(chamber_id=chamber_id, property_name=property_name, property_value=property_value)
+                else:
+                    chamber_property = ChamberProperties.objects.get(pk=property_id)
+                    chamber_property.property_name = property_name
+                    chamber_property.property_value = property_value
+                    chamber_property.save(update_fields=(["property_name", "property_value"]))
+
+            elif "marker_submit" in button :
+                form = MarkerForm(request.POST)
+                if form.is_valid():
+                    marker_id = int(request.POST.get("marker_id"))
+                    marker_name = form.cleaned_data["marker_name"]
+                    marker_string = form.cleaned_data["marker_string"]
+                    marker_time = form.cleaned_data["time"]
+
+                    if marker_id == 0:
+                        chamber_id = int(request.POST.get("chamber_id"))
+                        Marker.objects.create(chamber_id=chamber_id, marker_name=marker_name, marker_string=marker_string, time=marker_time)
+                    else:
+                        marker = Marker.objects.get(pk=marker_id)
+                        marker.marker_name = marker_name
+                        marker.marker_string = marker_string
+                        marker.time = marker_time
+                        marker.save(update_fields=(["marker_name", "marker_string", "time"]))
+
+            else :
+                pass
+        return JsonResponse(True, safe=False)
+
+
+class RunInfoView(generic.DetailView):
+    model = Runs
+    template_name = 'expert/run.html'
+    def get(self, request, runs_id):
+        run_property_form = RunPropertiesForm()
+        run = Runs.objects.get(pk=runs_id)
+        return render(request, self.template_name, {'run': run, 'run_property_form' : run_property_form})
+
+    def post(self, request, *args, **kwargs) :
+        if request.user.is_authenticated:
+            #get button id
+            button = request.POST.get("button")
+
+            if "remove" in button :
+                split_str = button.split("_")
+                rp_id_str = split_str[1]
+                rp_id = int(rp_id_str)
+                rp = RunProperties.objects.get(pk=rp_id)
+                rp.delete()
+            elif "property_submit" in button :
+                property_id = int(request.POST.get("property_id"))
+                property_name = request.POST.get("property_name")
+                property_value = request.POST.get("property_value")
+
+                if property_id == 0:
+                    run_id = int(request.POST.get("run_id"))
+                    RunProperties.objects.create(runs_id=run_id, property_name=property_name, property_value=property_value)
+                else:
+                    run_property = RunProperties.objects.get(pk=property_id)
+                    run_property.property_name = property_name
+                    run_property.property_value = property_value
+                    run_property.save(update_fields=(["property_name", "property_value"]))
+            else :
+                pass
+        return JsonResponse(True, safe=False)
+
+class RunsView(generic.ListView):
+    model = Runs
+    template_name = 'expert/runs.html'
+
+class ParameterView(generic.ListView):
+    model = Parameter
+    template_name = 'expert/parameters.html'
+
+def SensorListView(request):
+    customer = Customer.objects.get(user=request.user)
+    chambers = Chamber.objects.filter(customer=customer)
+    sensor_list = Sensor.objects.filter(chamber__in=chambers)
+    return render(request, 'expert/sensor_list.html', {'sensor_list': sensor_list})
+
+def ChamberListView(request):
+    customer = Customer.objects.get(user=request.user)
+    chamber_list = Chamber.objects.filter(customer=customer)
+    return render(request, 'expert/chamber_list.html', {'chamber_list': chamber_list})
+
+class RecipeListView(generic.ListView):
+    def get(self, request):
+        customer = Customer.objects.get(user=request.user)
+        recipe_list = Recipe.objects.filter(customer=customer)
+        recipe_form = RecipeForm()
+        return render(request, 'expert/recipe_list.html', {'form': recipe_form, 'recipe_list': recipe_list})
+
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            user = User.objects.get(username=request.user)
+            customer = Customer.objects.get(user=user)
+            #get button id
+            button = request.POST.get("button")
+            if "remove" in button :
+                split_str = button.split("_")
+                rp_id_str = split_str[1]
+                rp_id = int(rp_id_str)
+                rp = Recipe.objects.get(pk=rp_id)
+                rp.delete()
+            elif "recipe_submit" in button :
+                recipe_id = int(request.POST.get("recipe_id"))
+                name = request.POST.get("name")
+
+                if recipe_id == 0:
+                    Recipe.objects.create(name=name, customer=customer)
+                else:
+                    recipe = Recipe.objects.get(pk=recipe_id)
+                    recipe.name = name
+                    recipe.save(update_fields=(["name"]))
+            else:
+                pass
+        recipe_list = Recipe.objects.filter(customer=customer)
+        recipe_form = RecipeForm()
+        return render(request, 'expert/recipe_list.html', {'form': recipe_form, 'recipe_list': recipe_list})
+
+class SensorCreate(CreateView):
+    model = Sensor
+    fields = [ 'chamber', 'sensor_type', 'serial_number']
+
+def sensors(request):
+
+    cust = Customer.objects.filter(user=request.user)
+    chambers = Chamber.objects.filter(customer=cust)
+    sensors_list = Sensor.objects.filter(chamber__in=chambers)
+    all_sensor_objects = []
+    for sens in sensors_list :
+        sensor_object = {}
+        sensor_object['id'] = sens.pk
+        sensor_object['chamber_id']=sens.chamber_id
+        sensor_object['sensor_type_id']=sens.sensor_type_id
+        sensor_object['serial_number']=sens.serial_number
+        all_sensor_objects.append(sensor_object)
+
+    return JsonResponse(all_sensor_objects, safe=False)
+
+def chambers(request):
+
+    cust = Customer.objects.filter(user=request.user)
+    chamber_list = Chamber.objects.filter(customer=cust)
+    all_chamber_objects = []
+    for cham in chamber_list:
+        chamber_object = {}
+        chamber_object['id']=cham.pk
+        chamber_object['chamber_name']=cham.chamber_name
+        chamber_object['chamber_type']=cham.chamber_type
+        all_chamber_objects.append(chamber_object)
+
+    return JsonResponse(all_chamber_objects, safe=False)
+
+def files(request):
+
+    cust = Customer.objects.filter(user=request.user)
+    files_list = FileUploadModel.objects.filter(customer=cust)
+    all_file_objects = []
+    for file in files_list:
+        file_object = {}
+        file_object['id']=file.pk
+        file_object['name']=file.name
+        file_object['sensor_id']=file.sensor_id
+        file_object['file_type_id']=file.file_type_id
+        file_object['processed']=file.parsed
+        all_file_objects.append(file_object)
+
+    return JsonResponse(all_file_objects, safe=False)
+
+def filetypes(request):
+    cust = Customer.objects.filter(user=request.user)
+    files_types_list = FileType.objects.filter(customer=cust)
+    all_file_type_objects = []
+    for file in files_types_list:
+        file_type_object = {}
+        file_type_object['id']=file.pk
+        file_type_object['name']=file.name
+        all_file_type_objects.append(file_type_object)
+
+    return JsonResponse(all_file_type_objects, safe=False)

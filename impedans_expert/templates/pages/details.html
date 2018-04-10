@@ -1,0 +1,120 @@
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+
+{% block main_content %}
+
+<div id="graph_display"></div>
+
+<div id="chambers-accordion" role="tablist" aria-multiselectable="true">
+    <div class="card">
+        <div class="card-header bg-primary text-white" role="tab" id="headingOne">
+            <h3 class="mb-0">
+                <a id="no-decoration" data-toggle="collapse" data-parent="#chambers-accordion" href="#collapse-chambers" aria-expanded="true" aria-controls="collapse-chambers">
+                    Chambers
+                </a>
+            </h3>
+        </div>
+        
+        <div id="collapse-chambers" class="collapse show" role="tabpanel" aria-labelledby="headingOne">
+            <div data-step="1" data-intro="Choose a parameter to graph, and select the pulse position if applicable. If the parsed file is not a pulse file, select None.">
+                <label for="parameter-selector">Choose parameter:</label>
+                <select id="parameter-selector" name="parameter-selector">
+                    {% for parameter in parameters %}
+                        <option id="parameter-{{parameter.id}}" value="{{parameter.id}}">{{parameter.parameter_name}}</option>
+                    {% endfor %}
+                </select>
+                at position
+                <select id="parameter-selector" name="parameter-selector">
+                    {% for position in positions %}
+                        <option value="{{parameter_position}}">{{position}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="card-body p-1">
+                <table class="table table-hover">
+                    <tr class="table-active">
+                        <th>Chamber</th>
+                        <th class="chamber-width">Sensor</th>
+                        <th data-step="3" data-intro="Then click on a run to graph the chosen parameter for that particular run.">Runs</th>
+                    </tr>
+                    {% for chamber in chambers reversed %}
+                        <tr>
+                            <td data-step="2" data-intro="Click 'Show Runs' to show a list of runs done on this chamber. The format is 'Run Start Time (Run Duration)'." class="chamber-width">
+                                {{chamber}}
+                                <button class="btn btn-primary space-this" type="button" data-toggle="collapse" data-target="#collapse{{forloop.counter}}" aria-expanded="false" aria-controls="collapse{{forloop.counter}}">
+                                    Show Runs
+                                </button>
+                            </td>
+                            <td>
+                                {% for sensor in chamber.sensor_set.all %}
+                                    <p data-sensor-id="{{sensor.id}}">
+                                        {{sensor.serial_number}}
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control" placeholder="Minutes" name="graph-input">
+                                            <span class="input-group-btn">
+                                                <button class="btn btn-secondary" type="button">Graph</button>
+                                            </span>
+                                        </div>
+                                    </p>
+                                {% empty %}
+                                    <p>No sensor assigned to this chamber.</p>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <div class="collapse" id="collapse{{forloop.counter}}">
+                                    {% for run in chamber.runs_set.all %}
+                                        <p><p id="run-{{forloop.counter}}" data-run-id="{{run.id}}" data-run-start="{{run.start_time|date:'c'}}" data-run-end="{{run.end_time|date:'c'}}">{{forloop.counter}} - {{run}}</p></p>
+                                    {% empty %}
+                                        <p>No Runs</p>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="data-accordion" role="tablist" aria-multiselectable="true">
+    <div class="card">
+        <div class="card-header bg-primary text-white" role="tab" id="headingTwo" data-step="4" data-intro="Click here to see a list of files that have been uploaded under each chamber, as well as the date and whether the file has been parsed.">
+            <h3 class="mb-0">
+                <a id="no-decoration" data-toggle="collapse" data-parent="#data-accordion" href="#collapse-files" aria-expanded="true" aria-controls="collapse-files">
+                    Uploaded Data
+                </a>
+            </h3>
+        </div>    
+        <div id="collapse-files" class="collapse in" role="tabpanel" aria-labelledby="headingTwo">
+            <div class="card-body p-1">
+                <table class="table table-hover">
+                    <tr class="table-active">
+                        <th>File</th>
+                        <th>Chamber</th>
+                        <th>Date added</th>
+                        <th>Added</th>
+                    </tr>
+                    {% for file_upload in files %}
+                            <tr>
+                                <td>{{file_upload.name}}</td>
+                                <td>{{file_upload.chamber}}</td>
+                                <td>{{file_upload.date}}</td>
+                                {% if file_upload.parsed %}
+                                    <td>
+                                        <input type="checkbox" checked='checked' onclick="return false;" />
+                                    </td>
+                                {% elif not file_upload.parsed %}
+                                    <td>
+                                        <input type="checkbox" onclick="return false;" />
+                                    </td>
+                                {% endif %}
+                            </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

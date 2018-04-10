@@ -1,0 +1,40 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Login</title>
+        <link rel="stylesheet" type="text/css" href="{% static 'expert/style.css' %}" />
+    </head>
+    <div class="login_banner"><img src="{% static 'expert/images/impedans-banner.png' %}" alt="Impedans_Logo"></div>
+
+
+    <body>
+
+
+
+<h2>Sign up</h2>
+    <div class="logout">
+        <a href="{% url 'login' %}">Login</a>
+    </div>
+    <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <p>
+        {{ field.label_tag }}<br>
+        {{ field }}
+        {% if field.help_text %}
+          <small style="color: grey">{{ field.help_text }}</small>
+        {% endif %}
+        {% for error in field.errors %}
+          <p style="color: red">{{ error }}</p>
+        {% endfor %}
+      </p>
+    {% endfor %}
+    <button type="submit">Sign up</button>
+    </form>
+
+    </body>
+</html>

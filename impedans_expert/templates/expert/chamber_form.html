@@ -1,0 +1,129 @@
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+	Add Chamber
+{% endblock %}
+
+{% block main_content %}
+<div class="card loading-card" id="card-loaded">
+	<h3 class="card-header bg-primary text-white">
+		Add Chamber
+	</h3>
+	<div class="card-body">
+		<form class="form-horizontal" action="" method="post" enctype="multipart/form-data">
+			{% csrf_token %} {{ properties_formset.management_form }}
+			<!-----------------------Chamber------------------------------------------------------>
+			<table>
+				<tr>
+					<td style="vertical-align:top">
+						<table>
+							<tr>
+								{% for field in chamber_form %}
+								<td>{{ field|as_crispy_field }}</td>
+								{% endfor %}
+							</tr>
+						</table>
+					</td>
+					<br />
+					<!-----------------------Chamber Properties------------------------------------------>
+					<td>
+						<p>&nbsp &nbsp &nbsp</p>
+					</td>
+					<td>
+						<table class="new-chamber-properties" id="propertiestable">
+							<script type="text/html" id="property-template">
+								<div id="property-__prefix__">
+									<table>
+										<tr>
+											{% for field in properties_formset.empty_form %}
+												<td>{{ field|as_crispy_field }}</td>
+											{% endfor %}
+										</tr>
+									</table>
+								</div>
+							</script>
+
+							<div id="property-form">
+								<tr>
+									{% for properties_form in properties_formset %}
+									<div id="property-{{ forloop.counter0 }}"></div>
+									{% endfor %}
+								</tr>
+							</div>
+							<tr>
+								<td>
+									<a href="#" id="add-property-button" class="btn btn-outline-primary add-item">Add Properties</a>
+								</td>
+								<td>
+									<a href="#" id="remove-property-button" class="btn btn-outline-danger remove-item">Remove Properties</a>
+								</td>
+								<td>
+									<button class="btn btn-primary" type="submit">Submit</button>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+</div>
+{% endblock %}
+
+{% block end_scripts %}
+<script>
+	$(document).ready(function () {
+		$('.add-item').click(function (ev) {
+			ev.preventDefault();
+			var count = $('#property-form').children().length;
+			console.log(count)
+			var tmplMarkup = $('#property-template').html();
+			var compiledTmpl = tmplMarkup.replace(/__prefix__/g, count);
+			$('div#property-form').append(compiledTmpl);
+
+			// update form count
+			$('#id_form-TOTAL_FORMS').attr('value', count + 1);
+
+			// some animate to scroll to view our new form
+			$('html, body').animate({ scrollTop: $("#add-property-button").position().top - 200 }, 800);
+		});
+
+		for (var i = 0; i < 4; i++) {
+			var tmplMarkup = $('#property-template').html();
+			var compiledTmpl = tmplMarkup.replace(/__prefix__/g, i);
+			$('div#property-form').append(compiledTmpl);
+			// update form count
+			$('#id_form-TOTAL_FORMS').attr('value', i + 1);
+		}
+		document.getElementById("id_form-0-property_name").value = "Process";
+		document.getElementById("id_form-1-property_name").value = "Type";
+		document.getElementById("id_form-2-property_name").value = "Model";
+		document.getElementById("id_form-3-property_name").value = "Electrode Diameter";
+		document.getElementById("card-loaded").style.visibility = "visible";
+
+		$('.remove-item').click(function (ev) {
+			ev.preventDefault();
+			var count = $('#property-form').children().length;
+			console.log(count);
+			if (count > 0) {
+				var successCount = count - 1;
+				console.log(successCount);
+				var formlist = $('#property-form')[0];
+				while (count > successCount) {
+					var childNode = formlist.lastChild;
+					formlist.removeChild(childNode);
+					count = $('#property-form').children().length;
+				}
+				// update form count
+				$('#id_form-TOTAL_FORMS').attr('value', count);
+
+				// some animate to scroll to view our new form
+				$('html, body').animate({ scrollTop: $("#remove-property-button").position().top - 200 }, 800);
+			}
+		});
+	});
+</script>
+{% endblock %}

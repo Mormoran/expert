@@ -1,0 +1,41 @@
+from django.conf.urls import include, url
+from django.contrib.auth import views as auth_views
+from django.contrib import admin
+from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import reverse_lazy
+from django.views import defaults as default_views
+from impedans_expert.expert import views
+
+urlpatterns = [
+    #url(r'^signup/$', views.signup, name='signup'),
+    url(r'^login/$', auth_views.login, name='account_login'),
+    url(r'^logout/$', login_required(auth_views.logout), {'next_page': 'account_login'}, name='logout'),
+    url(r'^$', login_required(views.DetailsView.as_view()), name='home'),
+    url(r'^details/$', login_required(views.DetailsView.as_view()), name='details'),
+    url(r'^profile/$', login_required(views.ProfileView.as_view()), name='profile'),
+
+    # ex: /polls/5/
+    # url(r'^(?P<customer_id>[0-9]+)/$', views.customers, name='customers'),
+    url(r'^customer/$', login_required(views.CustomerView.as_view()), name='customers'),
+    url(r'^chamberinfo/(?P<chamber_id>[0-9]+)/$', login_required(views.ChamberInfoView.as_view()), name='chamber'),
+
+    url(r'^parameters/$', login_required(views.ParameterView.as_view()), name='parameters'),
+    url(r'^sensorlist/$', login_required(views.SensorListView), name='sensor_list'),
+    url(r'^chamberlist/$', login_required(views.ChamberListView), name='chamber_list'),
+    url(r'^recipelist/$', login_required(views.RecipeListView.as_view()), name='recipe_list'),
+
+    # /polls/customer/add
+    # url(r'^customer/add/$', login_required(views.CustomerCreate.as_view()), name='customer-add'),
+    url(r'^chamber/add/$', login_required(views.chamberCreate), name='chamber-add'),
+    url(r'^sensor/add/$', login_required(views.SensorCreate.as_view()), name='sensor-add'),
+
+    url(r'^api/', include('expert_import.api.urls', namespace='import_api')),
+    url(r'^api/', include('expert.api.urls', namespace='expert_api')),
+    url(r'^api/', include('expert_algorithms.api.urls', namespace='algorithms_api')),
+    url(r'^api/', include('users.api.urls', namespace='users_api')),
+
+    url(r'^sensors/$', login_required(views.sensors), name='Sensors'),
+    url(r'^chambers/$', login_required(views.chambers), name='Chambers'),
+    url(r'^files/$', login_required(views.files), name='Files'),
+    url(r'^filetypes/$', login_required(views.filetypes), name='FileTypes'),
+]

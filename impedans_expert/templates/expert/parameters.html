@@ -1,0 +1,23 @@
+{% extends 'old_base.html' %}
+
+{% block main_content %}
+
+<H3>Parameter List</H3>
+{% if parameter_list %}
+	<table>
+		<tr>
+			<th>Parameter Name</th>
+		</tr>
+		{% for parameter in parameter_list %}
+			<tr>
+				<td><a href="{% url 'parameters' %}">{{parameter.parameter_name}}</a></td>
+			</tr>
+		{% endfor %}
+	</table>
+{% else %}
+	<p>No Parameters added.</p>
+{% endif %}
+
+{% endblock %}
+
+

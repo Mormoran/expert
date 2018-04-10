@@ -1,0 +1,299 @@
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_filters %}
+
+{% block styles %}
+  <link rel="stylesheet" type="text/css" href="{% static 'expert/style.css' %}" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+<script src="http://d3js.org/d3.v3.js"></script>
+
+<style>
+
+.graph_display {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+}
+
+.axis path,
+.axis line {
+  fill:none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.grid path,
+.grid line {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.25);
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill:none;
+  stroke-width:2.5px;
+}
+
+</style>
+
+
+{% endblock %}
+{% block main_content %}
+<div class="details_card_size">
+    <div class="card">
+        <a data-toggle="collapse" href="#result_form_1" aria-expanded="true" aria-controls="test-block">
+            <h2 class="card-header">Results Selection By Run</h2>
+        </a>
+        <div class="collapse" id="result_form_1">
+            <div class="algorithm_select_card_body">
+              <form class="form-horizontal" id="result_form" action="" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  {{ run_form|crispy }}
+                  <button type="submit" class="btn btn-primary">Submit</button>
+              </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="details_card_size">
+    <div class="card">
+        <a data-toggle="collapse" href="#result_form_2" aria-expanded="true" aria-controls="test-block">
+            <h2 class="card-header">Advanced Results Selection</h2>
+        </a>
+        <div class="collapse" id="result_form_2">
+            <div class="algorithm_select_card_body">
+              <form class="form-horizontal" id="result_form" action="" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  {{ form|crispy }}
+                  <button type="submit" class="btn btn-primary">Submit</button>
+              </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="graph_display" id="graph_display">
+<script src="http://d3js.org/d3.v3.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dc/2.1.9/dc.js"></script>
+<script type="text/javascript">
+var data = []
+
+function drawScatterPlot(graph_data, parameter)
+{
+  var chart = dc.seriesChart("#graph_display");
+  var ndx = crossfilter(graph_data);
+  // var parseDate = d3.time.format("%m/%d/%Y").parse;
+  // data.forEach(function(d) {
+  //   d.date = Date.parse(d.date);
+  //   d.total= d.http_404+d.http_200+d.http_302;
+  // });
+  var runDimension = ndx.dimension(function(d) {return d.x;});
+  var runGroup = runDimension.group().reduceSum(function(d) {return d.y;});
+  var min_x = runDimension.bottom(1)[0];
+  var max_x = runDimension.top(1)[0];
+
+  var symbolScale = d3.scale.ordinal().range(d3.svg.symbolTypes);
+  var symbolAccessor = function(d) { return symbolScale(d.key[0]); };
+  var subChart = function(c) {
+    return dc.scatterPlot(c)
+        .symbol(symbolAccessor)
+        .symbolSize(8)
+        .highlightedSize(10)
+  };
+
+  chart
+    .width(768)
+    .height(480)
+    .chart(subChart)
+    .x(d3.scale.linear().domain([min_x.x,max_x.x]))
+    .brushOn(false)
+    .yAxisLabel(parameter)
+    .xAxisLabel("Run")
+    .clipPadding(10)
+    .elasticY(true)
+    .dimension(runDimension)
+    .group(runGroup)
+    .mouseZoomable(true)
+    .shareTitle(false) // allow default scatter title to work
+    .seriesAccessor(function(d) {return "Chamber: ";})
+    // .keyAccessor(function(d) {return +d.key[1];})
+    // .valueAccessor(function(d) {return +d.value;})
+    .legend(dc.legend().x(100).y(20).itemHeight(13).gap(5).horizontal(1).legendWidth(140).itemWidth(70));
+  chart.yAxis().tickFormat(function(d) {return d3.format(',.2f')(d);});
+  chart.margins().left += 40;
+  dc.renderAll();
+
+  return;
+}
+
+function drawLineChart(graph_data, parameter)
+{
+  var chart = dc.lineChart("#graph_display");
+  var ndx = crossfilter(graph_data);
+  // var parseDate = d3.time.format("%m/%d/%Y").parse;
+  // data.forEach(function(d) {
+  //   d.date = Date.parse(d.date);
+  //   d.total= d.http_404+d.http_200+d.http_302;
+  // });
+  var runDimension = ndx.dimension(function(d) {return d.x;});
+  var runGroup = runDimension.group().reduceSum(function(d) {return d.y;});
+  var min_x = runDimension.bottom(1)[0];
+  var max_x = runDimension.top(1)[0];
+
+  chart
+    .width(768)
+    .height(400)
+    .x(d3.scale.linear().domain([min_x.x,max_x.x]))
+    .brushOn(true)
+    .yAxisLabel(parameter)
+    .xAxisLabel("Time")
+    .clipPadding(10)
+    .elasticY(true)
+    .dimension(runDimension)
+    .group(runGroup)
+    .mouseZoomable(true)
+  chart.yAxis().tickFormat(function(d) {return d3.format(',.2f')(d);});
+  chart.margins().left += 40;
+  dc.renderAll();
+  console.log("Test");
+
+  return;
+}
+
+
+function getScatterPlotRunData(url_string)
+{
+ $.getJSON(url_string, function(data)
+ {
+  if(data.length == 0){return;}
+  var data_points = data;
+  var graph_data = [];
+  for(i = 0; i < data_points.length; i++){
+    // graph_data.push({"x":data_points[i].start_time, "y":data_points[i].value});
+    graph_data.push({"x":i, "y":data_points[i].value});
+  }
+  drawScatterPlot(graph_data, data_points[0].parameter);
+  return;
+ });
+ return;
+}
+
+
+function getLineChartRunData(url_string)
+{
+ $.getJSON(url_string, function(data)
+ {
+  console.log(data);
+  if(data.length == 0){
+    var algorithm_run_id = {{algorithm_run_id}};
+    var algorithm_run_id_str = algorithm_run_id.toString();
+    var url_string = "/expert/api/algorithm-run-results/?runs=&algorithm_run=" + algorithm_run_id_str + "&parameter=&value=";
+    getScatterPlotRunData(url_string)
+    return;
+  }
+  var data_points = data;
+  var graph_data = [];
+  for(i = 0; i < data_points.length; i++){
+    // graph_data.push({"x":data_points[i].start_time, "y":data_points[i].value});
+    graph_data.push({"x":i, "y":data_points[i].value});
+  }
+  drawLineChart(graph_data, data_points[0].parameter);
+ });
+ return;
+}
+
+/*
+// get algorithm_runs
+function getAlgorithmRuns(url_string)
+{
+ $.getJSON(url_string, function(data)
+ {
+   
+ }
+}
+// get runs
+function getRuns(url_string)
+{
+ $.getJSON(url_string, function(data)
+ {
+   callback(data);
+ }
+}
+// get advanced selection of algorithm_time_results
+function getAlgorithmTimeResults(url_string)
+{
+ $.getJSON(url_string, function(data)
+ {
+   callback(data);
+ }
+}
+// get advanced selection of algorithm_run_results
+function getAlgorithmRunResults(url_string)
+{
+ $.getJSON(url_string, function(data)
+ {
+   callback(data);
+ }
+}
+*/
+
+$(document).ready(function(){
+        // set initial values to -1 ( object ids must be postive to be valid -> searching for id -1 gives empty set in api )
+        var algorithm_id = -1;
+        var algorithm_run_id = -1;
+        var chamber = -1;
+        var parameter = -1;
+        var mode = "";
+        var is_advanced_select = {{advanced_select}};
+        if (Boolean(is_advanced_select)){
+            // run advanced algorithm selection
+            // algorithm_id = {{algorithm_id}};
+            // chamber = {{chamber_id}};
+            // parameter = {{parameter_id}};
+            // mode = {{mode}};
+            
+            // getJSON data:
+            // Step 1: algorithm_run where algorithm_id = algorithm_id
+            //
+            // if mode = time
+            //     Step 2: algorithm_time_results where algorithm_run_id__in=algorithm_run_id, chamber=chamber_id, parameter=parameter_id
+            // else
+            //     Step 2: runs where chamber=chamber
+            //     Step 3: algorithm_run_results where algorithm_run_id__in=algorithm_run_id, runs__in=runs, parameter=parameter_id
+
+            console.log("ADVANCED SELECTION");
+        }
+        else{
+            var algorithm_run_id = {{algorithm_run_id}};
+            var algorithm_run_id_str = algorithm_run_id.toString(); 
+            var url_string = "/expert/api/algorithm-time-results/?algorithm_run=" + algorithm_run_id_str + "&parameter=&value=&start_time=&end_time=&chamber=";
+            getLineChartRunData(url_string);
+        }
+});
+</script>
+</div>
+
+{% endblock %}
+
+{% block end_scripts %}
+
+
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src='{% static "scripts/jquery.tmpl.min.js"%}'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/file-uploader/5.13.0/fine-uploader.min.js"></script>
+  <!-- Cookies.js, so we can get the CSRFToken cookie -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.min.js" charset="utf-8"></script>
+
+{% endblock %}
+

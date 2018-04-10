@@ -1,0 +1,33 @@
+# -*- coding: utf-8 -*-
+from django.contrib import admin
+
+from .models import Customer, Chamber, ChamberProperties, SensorType, Sensor, Data, Marker, Parameter, Recipe, Step
+
+admin.site.register(Customer)
+#admin.site.register(Chamber)
+admin.site.register(ChamberProperties)
+# admin.site.register(Runs)
+# admin.site.register(RunProperties)
+admin.site.register(SensorType)
+admin.site.register(Sensor)
+admin.site.register(Data)
+admin.site.register(Marker)
+admin.site.register(Parameter)
+admin.site.register(Recipe)
+admin.site.register(Step)
+# admin.site.register(Algorithm)
+# admin.site.register(AlgorithmResults)
+# admin.site.register(FileUploadModel)
+# admin.site.register(FileType)
+# admin.site.register(DocumentUpload)
+
+
+class ChamberPropertiesInline(admin.TabularInline):
+  model = ChamberProperties
+  extra = 3
+
+class ChamberAdmin(admin.ModelAdmin):
+  inlines = [ChamberPropertiesInline]
+
+admin.site.register(Chamber, ChamberAdmin)
+# Register your models here.

@@ -1,0 +1,381 @@
+from rest_framework.filters import (
+    SearchFilter,
+    OrderingFilter,
+)
+
+import django_filters
+
+from django_filters.rest_framework import DjangoFilterBackend
+
+from rest_framework.response import Response
+from rest_framework import filters
+from rest_framework import viewsets
+from rest_framework.generics import (
+    CreateAPIView,
+    DestroyAPIView,
+    ListAPIView,
+    RetrieveAPIView,
+    RetrieveUpdateAPIView,
+    UpdateAPIView,
+)
+
+from rest_framework.permissions import (
+    AllowAny,
+    DjangoModelPermissions,
+    DjangoObjectPermissions,
+    IsAuthenticated,
+    IsAdminUser,
+    IsAuthenticatedOrReadOnly,
+)
+
+from impedans_expert.users.models import User
+from impedans_expert.expert.models import (
+    Chamber,
+    ChamberProperties,
+    Customer,
+    Data,
+    Marker,
+    Parameter,
+    Sensor,
+    SensorType,
+)
+
+from impedans_expert.expert.api.serializers import (
+    ChamberCreateSerializer,
+    ChamberDetailSerializer,
+    ChamberListSerializer,
+    ChamberPropertiesCreateSerializer,
+    ChamberPropertiesDetailSerializer,
+    ChamberPropertiesListSerializer,
+    CustomerCreateSerializer,
+    CustomerDetailSerializer,
+    CustomerListSerializer,
+    DataCreateSerializer,
+    DataDetailSerializer,
+    DataListSerializer,
+    MarkerCreateSerializer,
+    MarkerDetailSerializer,
+    MarkerListSerializer,
+    ParameterCreateSerializer,
+    ParameterDetailSerializer,
+    ParameterListSerializer,
+    SensorCreateSerializer,
+    SensorDetailSerializer,
+    SensorListSerializer,
+    SensorTypeCreateSerializer,
+    SensorTypeDetailSerializer,
+    SensorTypeListSerializer,
+)
+
+from .pagination import (
+    ExpertPageNumberPagination,
+)
+
+from .permissions import (
+    IsOwnerOrAdmin,
+)
+
+##########################################################################################
+# Define API views for Chamber related operations, create, delete, edit, update and list #
+##########################################################################################
+
+class ChamberCreateAPIView(CreateAPIView):
+    queryset = Chamber.objects.all()
+    serializer_class = ChamberCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+class ChamberDeleteAPIView(DestroyAPIView):
+    queryset = Chamber.objects.all()
+    serializer_class = ChamberListSerializer
+    permission_classes = [IsAuthenticated]
+
+class ChamberDetailAPIView(RetrieveAPIView):
+    queryset = Chamber.objects.all()
+    serializer_class = ChamberDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+class ChamberListAPIView(ListAPIView):
+    queryset = Chamber.objects.all()
+    queryset = queryset.prefetch_related('customer')
+    serializer_class = ChamberListSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('id', 'chamber_name', 'chamber_type', 'customer')
+    # pagination_class = ExpertPageNumberPagination
+    permission_classes = [IsAuthenticated]
+
+    # def get_queryset(self):
+    #     owner = self.request.user
+    #     return Chamber.objects.filter(owner=owner)
+
+class ChamberUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = Chamber.objects.all()
+    serializer_class = ChamberListSerializer
+    permission_classes = [IsAuthenticated]
+
+#####################################################################################################
+# Define API views for Chamber Properties related operations, create, delete, edit, update and list #
+#####################################################################################################
+
+class ChamberPropertiesCreateAPIView(CreateAPIView):
+    queryset = ChamberProperties.objects.all()
+    serializer_class = ChamberPropertiesCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+class ChamberPropertiesDeleteAPIView(DestroyAPIView):
+    queryset = ChamberProperties.objects.all()
+    serializer_class = ChamberPropertiesListSerializer
+    permission_classes = [IsAuthenticated]
+
+class ChamberPropertiesDetailAPIView(RetrieveAPIView):
+    queryset = ChamberProperties.objects.all()
+    serializer_class = ChamberPropertiesDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+class ChamberPropertiesListAPIView(ListAPIView):
+    queryset = ChamberProperties.objects.all()
+    queryset = queryset.prefetch_related('chamber')
+    serializer_class = ChamberPropertiesListSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('id', 'chamber', 'property_name', 'property_value')
+    # pagination_class = ExpertPageNumberPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        owner = self.request.user
+        return ChamberProperties.objects.filter(owner=owner)
+
+class ChamberPropertiesUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = ChamberProperties.objects.all()
+    serializer_class = ChamberPropertiesListSerializer
+    permission_classes = [IsAuthenticated]
+
+###########################################################################################
+# Define API views for Customer related operations, create, delete, edit, update and list #
+###########################################################################################
+
+class CustomerCreateAPIView(CreateAPIView):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+class CustomerDeleteAPIView(DestroyAPIView):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerListSerializer
+    permission_classes = [IsAuthenticated]
+
+class CustomerDetailAPIView(RetrieveAPIView):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+class CustomerListAPIView(ListAPIView):
+    queryset = Customer.objects.all()
+    queryset = queryset.prefetch_related('user')
+    serializer_class = CustomerListSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('id', 'company_name', 'contact_name', 'contact_email', 'user')
+    # pagination_class = ExpertPageNumberPagination
+    permission_classes = [IsAuthenticated]
+
+class CustomerUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerListSerializer
+    permission_classes = [IsAuthenticated]
+
+#######################################################################################
+# Define API views for Data related operations, create, delete, edit, update and list #
+#######################################################################################
+
+class DataCreateAPIView(CreateAPIView):
+    queryset = Data.objects.all()
+    serializer_class = DataCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+class DataDeleteAPIView(DestroyAPIView):
+    queryset = Data.objects.all()
+    serializer_class = DataListSerializer
+    permission_classes = [IsAuthenticated]
+
+class DataDetailAPIView(RetrieveAPIView):
+    queryset = Data.objects.all()
+    serializer_class = DataDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+class DataFilter(django_filters.rest_framework.FilterSet):
+    time__gte = django_filters.IsoDateTimeFilter(name="time", lookup_expr='gte')
+    time__lte = django_filters.IsoDateTimeFilter(name="time", lookup_expr='lte')
+    class Meta:
+        model = Data
+        fields = ['id', 'time', 'time__gte', 'time__lte', 'sensor', 'parameter', 'parameter_value']
+
+class DataListAPIView(ListAPIView):
+    queryset = Data.objects.all()
+    queryset = queryset.prefetch_related('sensor', 'parameter')
+    serializer_class = DataListSerializer
+    time__gte = django_filters.DateTimeFilter(name="time", lookup_expr='gte')
+    time__lte = django_filters.DateTimeFilter(name="time", lookup_expr='lte')
+    filter_backends = (OrderingFilter, DjangoFilterBackend, )
+    # filter_fields = ('id', 'time', 'time__lte', 'time__gte', 'sensor', 'parameter', 'parameter_value')
+    ordering_fields = ('id', 'parameter', 'parameter_value', 'sensor', 'time')
+    ordering=("id")
+    filter_class = DataFilter
+    # pagination_class = ExpertPageNumberPagination
+    permission_classes = [IsAuthenticated]
+
+class DataUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = Data.objects.all()
+    serializer_class = DataListSerializer
+    permission_classes = [IsAuthenticated]
+
+#########################################################################################
+# Define API views for Marker related operations, create, delete, edit, update and list #
+#########################################################################################
+
+class MarkerCreateAPIView(CreateAPIView):
+    queryset = Marker.objects.all()
+    serializer_class = MarkerCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+class MarkerDeleteAPIView(DestroyAPIView):
+    queryset = Marker.objects.all()
+    serializer_class = MarkerListSerializer
+    permission_classes = [IsAuthenticated]
+
+class MarkerDetailAPIView(RetrieveAPIView):
+    queryset = Marker.objects.all()
+    serializer_class = MarkerDetailSerializer
+    permission_classes = [IsOwnerOrAdmin]
+
+class MarkerListAPIView(ListAPIView):
+    queryset = Marker.objects.all()
+    queryset = queryset.prefetch_related('chamber')
+    serializer_class = MarkerListSerializer 
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('id', 'time', 'chamber', 'marker_name', 'marker_string')
+    # pagination_class = ExpertPageNumberPagination
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+       user = User.objects.get(username=request.user)
+       customer = Customer.objects.get(user=user)
+       chambers = Chamber.objects.filter(customer=customer)
+       queryset = Marker.objects.filter(chamber__in=chambers)
+       serializer = MarkerListSerializer(queryset, many=True, context={'request':request})
+       return Response(serializer.data)
+
+class MarkerUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = Marker.objects.all()
+    serializer_class = MarkerListSerializer
+    permission_classes = [IsAuthenticated]
+
+############################################################################################
+# Define API views for Parameter related operations, create, delete, edit, update and list #
+############################################################################################
+
+class ParameterCreateAPIView(CreateAPIView):
+    queryset = Parameter.objects.all()
+    serializer_class = ParameterCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+class ParameterDeleteAPIView(DestroyAPIView):
+    queryset = Parameter.objects.all()
+    serializer_class = ParameterListSerializer
+    permission_classes = [IsAuthenticated]
+
+class ParameterDetailAPIView(RetrieveAPIView):
+    queryset = Parameter.objects.all()
+    serializer_class = ParameterDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+class ParameterListAPIView(ListAPIView):
+    queryset = Parameter.objects.all()
+    serializer_class = ParameterListSerializer 
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('id', 'parameter_short_name', 'parameter_name', 'parameter_position', 'parameter_type', 'parameter_unit')
+    # pagination_class = ExpertPageNumberPagination
+    permission_classes = [IsAuthenticated]
+
+class ParameterUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = Parameter.objects.all()
+    serializer_class = ParameterListSerializer
+    permission_classes = [IsAuthenticated]
+
+#########################################################################################
+# Define API views for Sensor related operations, create, delete, edit, update and list #
+#########################################################################################
+
+class SensorCreateAPIView(CreateAPIView):
+    queryset = Sensor.objects.all()
+    serializer_class = SensorCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+class SensorDeleteAPIView(DestroyAPIView):
+    queryset = Sensor.objects.all()
+    serializer_class = SensorListSerializer
+    permission_classes = [IsAuthenticated]
+
+class SensorDetailAPIView(RetrieveAPIView):
+    # queryset = Sensor.objects.all()
+    serializer_class = SensorDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        owner = self.request.user
+        return Sensor.objects.filter(owner=owner)
+
+class SensorListAPIView(ListAPIView):
+    queryset = Sensor.objects.all()
+    queryset = queryset.prefetch_related('chamber', 'sensor_type')
+    serializer_class = SensorListSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('id', 'chamber', 'sensor_type', 'serial_number')
+    # pagination_class = ExpertPageNumberPagination
+    permission_classes = [IsAuthenticated]
+
+    # def get_queryset(self):
+    #     owner = self.request.user
+    #     return Sensor.objects.filter(owner=owner)
+
+class SensorUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = Sensor.objects.all()
+    serializer_class = SensorDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+##############################################################################################
+# Define API views for Sensor Type related operations, create, delete, edit, update and list #
+##############################################################################################
+
+class SensorTypeCreateAPIView(CreateAPIView):
+    queryset = SensorType.objects.all()
+    serializer_class = SensorTypeCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+class SensorTypeDeleteAPIView(DestroyAPIView):
+    queryset = SensorType.objects.all()
+    serializer_class = SensorTypeListSerializer
+    permission_classes = [IsAuthenticated]
+
+class SensorTypeDetailAPIView(RetrieveAPIView):
+    queryset = SensorType.objects.all()
+    serializer_class = SensorTypeDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+class SensorTypeListAPIView(ListAPIView):
+    queryset = SensorType.objects.all()
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('id', 'sensor_type',)
+    # pagination_class = ExpertPageNumberPagination
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+       user = User.objects.get(username=request.user)
+       customer = Customer.objects.get(user=user)
+       chambers = Chamber.objects.filter(customer=customer)
+       queryset = Sensor.objects.filter(chamber__in=chambers)
+       serializer = SensorTypeListSerializer(queryset, many=True, context={'request':request})
+       return Response(serializer.data)
+
+class SensorTypeUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = SensorType.objects.all()
+    serializer_class = SensorTypeDetailSerializer
+    permission_classes = [IsAuthenticated]

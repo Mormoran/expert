@@ -1,0 +1,32 @@
+{% extends 'old_base.html' %}
+
+{% block title %}
+	Chamber List
+{% endblock %}
+
+
+{% block main_content %}
+<div class="details_card_size" style="width:40%">
+    <div class="card">
+        <h3 class="card-header bg-primary text-white">
+        	Chamber List
+        </h3>
+        <div class="card-body p-0">
+            {% if chamber_list %}
+				<table  class="table table-hover">
+					<tr class="table-active">
+						<th>Chamber Name</th>
+					</tr>
+					{% for chamber in chamber_list %}
+						<tr>
+							<td><a href="{% url 'chamber' chamber.id %}">{{chamber.chamber_name}}</a></td>
+						</tr>
+					{% endfor %}
+             	</table>
+            {% else %}
+				<p>No Chambers added.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

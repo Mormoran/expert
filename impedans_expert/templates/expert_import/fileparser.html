@@ -1,0 +1,76 @@
+
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_filters %}
+
+
+
+{% block styles %}
+  <link rel="stylesheet" type="text/css" href="{% static 'expert/style.css' %}" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+
+{% endblock %}
+
+
+{% block main_content %}
+
+
+<div class="card-group">
+  <div class="algorithm_card_size">
+    <div class="card">
+      <h2 class="card-header">File Parser</h2>
+      <form class="form-horizontal" id="chamber-form" action="" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">
+        <input type="checkbox" onClick="toggle(this)" /> Toggle All<br/>
+        <div class="card-block" style="height:180px; overflow-y: auto;">
+          <!-- <h4 class="card-title">Parameter Select</h4> -->
+          
+          {{ parse_form.file|as_crispy_field }}
+        </div>
+        </li>
+        <li class="list-group-item">
+        <div class="card-block">
+          {{ parse_form.config|as_crispy_field }}
+
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div
+        </li>
+      </ul>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block end_scripts %}
+
+
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src='{% static "scripts/jquery.tmpl.min.js"%}'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/file-uploader/5.13.0/fine-uploader.min.js"></script>
+  <!-- Cookies.js, so we can get the CSRFToken cookie -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.min.js" charset="utf-8"></script>
+
+<script>
+    function toggle(source)
+    {
+        checkboxes = document.getElementsByName('file');
+        for( var i=0; i < checkboxes.length; i++ )
+        {
+            checkboxes[i].checked = source.checked;
+        }
+    }
+</script>
+
+
+{% endblock %}
+

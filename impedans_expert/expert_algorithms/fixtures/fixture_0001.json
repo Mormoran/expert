@@ -1,0 +1,72 @@
+[
+ {
+  "model": "expert_algorithms.algorithm",
+  "pk": 1,
+  "fields":
+  {
+   "algorithm_name": "mean",
+   "algorithm_src": "-",
+   "algorithm_description": "-"
+  }
+ },
+ {
+  "model": "expert_algorithms.algorithm",
+  "pk": 2,
+  "fields":
+  {
+   "algorithm_name": "standard deviation",
+   "algorithm_src": "-",
+   "algorithm_description": "-"
+  }
+ },
+ {
+  "model": "expert_algorithms.algorithm",
+  "pk": 3,
+  "fields":
+  {
+   "algorithm_name": "z score",
+   "algorithm_src": "-",
+   "algorithm_description": "Self learning z score"
+  }
+ },
+ {
+  "model": "expert_algorithms.algorithm",
+  "pk": 4,
+  "fields":
+  {
+   "algorithm_name": "golden running z score",
+   "algorithm_src": "-",
+   "algorithm_description": "-"
+  }
+ },
+ {
+  "model": "expert_algorithms.algorithm",
+  "pk": 5,
+  "fields":
+  {
+   "algorithm_name": "golden z score by mean",
+   "algorithm_src": "-",
+   "algorithm_description": "-"
+  }
+ },
+ {
+  "model": "expert_algorithms.algorithm",
+  "pk": 6,
+  "fields":
+  {
+   "algorithm_name": "golden z score by median",
+   "algorithm_src": "-",
+   "algorithm_description": "-"
+  }
+ },
+ {
+  "model": "expert_algorithms.algorithm",
+  "pk": 7,
+  "fields":
+  {
+   "algorithm_name": "training z",
+   "algorithm_src": "-",
+   "algorithm_description": "Training algorithm"
+  }
+ }
+]

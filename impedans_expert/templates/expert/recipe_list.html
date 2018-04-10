@@ -1,0 +1,152 @@
+
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+
+
+{% block styles %}
+
+
+<link rel="stylesheet" type="text/css" href="{% static 'expert/style.css' %}" />
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" media="all" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+
+
+{% endblock %}
+
+
+{% block main_content %}
+
+
+<div id="mymodal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+      <form class="form-horizontal" id="recipe-form" action="" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="modal-content">
+          <div class="modal-header">
+            <h3>Add Recipe</h3>
+          </div>
+          <div class="modal-body">
+
+              {{ form.name|as_crispy_field }}
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary submit_recipe" id="recipe_submit">Submit</button>
+          </div>
+      </div>
+      </form>
+  </div>
+</div>
+
+
+
+<button class="btn btn-primary new-obj-button" data-toggle="modal" data-target="#mymodal" id="add_recipe">Add Recipe</button>
+
+<div class="details_card_size" style="width:40%">
+    <div class="card">
+        <h3 class="card-header bg-primary text-white">
+        Recipe List
+        </h3>
+        <div class="card-body p-0">
+            {% if recipe_list %}
+             <table  class="table .table-hover">
+              <tr class="table-active">
+                <th>Recipe Name</th>
+                <th></th>
+                <th></th>
+              </tr>
+             {% for recipe in recipe_list %}
+               <tr>
+                 <td id="name_{{ recipe.id }}">{{ recipe.name }}</td>
+                 <td><button id="edit_{{ recipe.id }}" data-toggle="modal" data-target="#mymodal" class="btn btn-outline-secondary add-item obj-select-button">Edit</button></td>
+                 <td><button class="btn btn-danger remove-button" type="submit" id="remove_{{ recipe.id }}">Remove</button></td>
+               </tr>
+             {% endfor %}
+             </table>
+            {% else %}
+             <p>No Recipes added.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+
+{% block end_scripts %}
+
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src='{% static "scripts/jquery.tmpl.min.js"%}'></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/file-uploader/5.13.0/fine-uploader.min.js"></script>
+<!-- Cookies.js, so we can get the CSRFToken cookie -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.min.js" charset="utf-8"></script>
+
+  <script>
+      $(document).ready(function()
+      {
+          $('.remove-button').click(function(el)
+          {
+            var buttonid = el.target.id;
+            $.post("{% url 'recipe_list' %}", {csrfmiddlewaretoken:'{{csrf_token}}', button: buttonid}, function(data) {
+                location.reload();
+            }).done();
+          });
+      });
+
+  </script>
+
+
+<script>
+      var update_id = 0;
+
+      $(document).ready(function()
+      {
+            //if updating an object, gets the obj id
+          $('.obj-select-button').click(function(el)
+          {
+            var buttonid = el.target.id;
+            var thenum = buttonid.replace( /^\D+/g, '');
+            var num = parseInt(thenum);
+            update_id = num;
+            var name_id = "name_" + thenum;
+            var name = document.getElementById(name_id).innerText;
+
+            document.getElementById("id_name").value = name;
+          });
+
+            //if creating an object, sets obj id to 0
+          $('.new-obj-button').click(function(el)
+          {
+            button_id = el.target.id
+            var thenum = button_id.replace( /^\D+/g, '');
+            run_id = parseInt(thenum);
+            update_id = 0;
+            document.getElementById("id_name").value = "";
+          });
+
+
+            //if creating an object, sets obj id to 0
+          $('.submit_recipe').click(function(el)
+          {
+            var recipe_name = document.getElementById("id_name").value;
+            var buttonid = el.target.id;
+            $.post("{% url 'recipe_list' %}", {csrfmiddlewaretoken:'{{csrf_token}}', button: buttonid, recipe_id: update_id, name: recipe_name}, function(data) {
+                location.reload();
+            }).done();
+          });
+      });
+</script>
+
+
+{% endblock %}
+

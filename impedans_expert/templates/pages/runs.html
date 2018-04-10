@@ -1,0 +1,139 @@
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_filters %}
+
+{% block title %}
+Runs Overview
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.css">
+{% endblock %}
+
+{% block main_content %}
+<div class="row">
+	<div class="col-md-2 p-1 ">
+		<div class="card">
+			<h3 class="card-header bg-danger text-white text-center banner">
+				Run Filter
+			</h3>
+			<div id="searchBox" class="card-body p-2 text-center mx-auto">
+				<h5>Filter by Date</h5>
+				<div id="filterDate"></div>
+				<hr>
+				<h5>Filter by Chamber</h5>
+				<div id="filterChamber"></div>
+				<hr>
+				<h5>Filter by Run Length</h5>
+				<div id="filterLength"></div>
+				<hr>
+				<h5>Filter by Recipe</h5>
+				<div id="filterRecipe"></div>
+				<hr>
+				<h5>Filter by Z-Score</h5>
+				<div id="filterZScore"></div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="col-md-10 p-1">
+		<div class="card">
+			<div class="card-header text-white text-center p-2 banner">
+				<div id="graphRuns" class="floatLeft" hidden>
+					<a id="chartTheseRuns" href=""><i class="fas fa-chart-line"></i></a>
+				</div>
+				<h3>Runs List</h3>
+			</div>
+			<div class="card-body p-0">
+				<table id="dataTable" class="table table-striped display compact">                    
+					<thead>
+						<tr class="table-active">
+							<th></th>
+							<th>Date</th>
+							<th>Chamber</th>
+							<th>Run Length</th>
+							<th>Last Recipe</th>
+							<th>Last Z-Score</th>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr>
+							<th id="hide"></th>
+							<th id="Date">Date</th>
+							<th id="Chamber">Chamber</th>
+							<th id="Length">Run Length</th>
+							<th id="Recipe">Last Recipe</th>
+							<th id="Z-Score">Last Z-Score</th>
+						</tr>
+					</tfoot>
+					<tbody>
+						{% for run, length in runs_lengths_list %}
+							<tr>
+								<td><input class="checkboxRun" data-run_id="{{run.id}}" type="checkbox"></td>
+								<td><a href="{% url 'expert_import:run' run.id %}">{{run.start_time}}</a></td>
+								<td><a href="{% url 'chamber' run.chamber.id %}">{{run.chamber}}</a></td>
+								<td><a {% comment %} href="{% url 'sensor' sensor.id %}" {% endcomment %}>{{length}}</a></td>
+								<td><a {% comment %} href="{% url 'sensor' sensor.id %}" {% endcomment %}>{{run.recipe}}</a></td>
+								<td><a {% comment %} href="{% url 'sensor' sensor.id %}" {% endcomment %}>{{last_z_score}}</a></td>
+							</tr>
+						{% empty %}
+							<div class="card-block p-1 text-center mx-auto">
+                                <hr>
+                                <h3>No run data gathered yet.</h3>
+                                <hr>
+                            </div>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>    
+</div>
+{% endblock %}
+
+{% block end_scripts %}
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script src="{% static 'js/filter.js' %}"></script>
+<script>
+	$(document).ready(function() {
+		$('#hide').hide();
+		$('#Date').appendTo('#filterDate');
+		$('#Chamber').appendTo('#filterChamber');
+		$('#Length').appendTo('#filterLength');
+		$('#Recipe').appendTo('#filterRecipe');
+		$('#Z-Score').appendTo('#filterZScore');
+
+		var choiceContainer = $("#dataTable");
+		
+		var countChecked = function () {
+			var n = choiceContainer.find("input:checked").length;
+			if (n >= 1) {
+				$("#graphRuns").attr("hidden", false);
+			} else {
+				$("#graphRuns").attr("hidden", true);
+			}
+		};
+		
+		countChecked();
+
+		$("input[type=checkbox]").on("click", countChecked);
+
+		$("#graphRuns").click(function() {
+			var ids_list = new Array();
+
+			function generateLink(ids_list) {
+				var url = "{% url 'expert_import:chart_runs' %}";
+				url += "?id=" + ids_list.join('&id=');
+				return url;
+			};
+
+			choiceContainer.find("input:checked").each(function() {
+				var run_id = $(this).data("run_id");
+				ids_list.push(run_id);
+			});
+
+			$("#chartTheseRuns").attr("href", generateLink(ids_list));
+		});
+	});
+</script>
+{% endblock %}

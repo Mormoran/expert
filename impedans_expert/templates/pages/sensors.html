@@ -1,0 +1,135 @@
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_filters %}
+
+{% block title %}
+Sensors Overview
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.css">
+{% endblock %}
+
+{% block main_content %}
+
+<div id="createSensor" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form class="form-horizontal" id="chamber-form" action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="valueModalTitle">New Chamber</h3>
+                </div>
+                <div class="modal-body">
+                    {% crispy sensor_form %}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-2 p-1 ">
+        <div class="card">
+            <h3 class="card-header bg-danger text-white text-center banner">
+                Sensor Filter
+            </h3>
+            <div id="searchBox" class="card-body p-2 text-center mx-auto">
+                <h5>Filter by Sensor</h5>
+                <div id="filterSensor"></div>
+                <hr>
+                <h5>Filter by Serial Number</h5>
+                <div id="filterSerial"></div>
+                <hr>
+                <h5>Filter by Chamber</h5>
+                <div id="filterChamber"></div>
+                <hr>
+                <h5>Filter by Type</h5>
+                <div id="filterType"></div>
+                <hr>
+                <h5>Filter by Run</h5>
+                <div id="filterRun"></div>
+                <hr>
+                <h5>Filter by Recipe</h5>
+                <div id="filterRecipe"></div>
+                <hr>
+                <h5>Filter by Z-Score</h5>
+                <div id="filterZScore"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-10 p-1">
+        <div class="card">
+            <div class="card-header text-white text-center p-2 banner">
+                <div class="floatLeft">
+                    <a href="" data-toggle="modal" data-target="#createSensor"><i class="fas fa-plus-square"></i></a>
+                </div>
+                <h3>Sensors List</h3>
+            </div>
+            <div class="card-body p-0">
+                <table id="dataTable" class="table table-striped display compact">                    
+                    <thead>
+                        <tr class="table-active">
+                            <th>Sensor</th>
+                            <th>Serial Number</th>
+                            <th>Chamber</th>
+                            <th>Type</th>
+                            <th>Last Run</th>
+                            <th>Last Recipe</th>
+                            <th>Last Z-Score</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th id="Sensor">Sensor</th>
+                            <th id="Serial">Serial</th>
+                            <th id="Chamber">Chamber</th>
+                            <th id="Type">Type</th>
+                            <th id="Run">Last Run</th>
+                            <th id="Recipe">Last Recipe</th>
+                            <th id="Z-Score">Last Z-Score</th>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        {% for sensor in sensors_list %}
+                            <tr>
+                                <td><a href="{% url 'sensor' sensor.id %}">{{sensor.name}}</a></td>
+                                <td><a {% comment %} href="{% url 'sensor' sensor.id %}" {% endcomment %}>{{sensor.serial_number}}</a></td>
+                                <td><a {% comment %} href="{% url 'sensor' sensor.id %}" {% endcomment %}>{{sensor.chamber}}</a></td>
+                                <td><a {% comment %} href="{% url 'sensor' sensor.id %}" {% endcomment %}>{{sensor.sensor_type}}</a></td>
+                                <td><a {% comment %} href="{% url 'sensor' sensor.id %}" {% endcomment %}>{{last_run}}</a></td>
+                                <td><a {% comment %} href="{% url 'sensor' sensor.id %}" {% endcomment %}>{{last_recipe}}Off of run-property: recipe</a></td>
+                                <td><a {% comment %} href="{% url 'sensor' sensor.id %}" {% endcomment %}>{{last_z_score}}</a></td>
+                            </tr>
+                        {% empty %}
+                            <div class="card-block p-1 text-center mx-auto">
+                                <hr>
+                                <h3>No sensors created yet.</h3>
+                                <hr>
+                                <button class="btn btn-secondary banner new-obj-button" id="create-sensor" data-id="value" data-toggle="modal" data-target="#createSensor">Create New Sensor</button>
+                            </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>    
+</div>
+{% endblock %}
+
+{% block end_scripts %}
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script src="{% static 'js/filter.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        $('#Sensor').appendTo('#filterSensor');
+        $('#Serial').appendTo('#filterSerial');
+        $('#Chamber').appendTo('#filterChamber');
+        $('#Type').appendTo('#filterType');
+        $('#Run').appendTo('#filterRun');
+        $('#Recipe').appendTo('#filterRecipe');
+        $('#Z-Score').appendTo('#filterZScore');
+    });
+</script>
+{% endblock %}

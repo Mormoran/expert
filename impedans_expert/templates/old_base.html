@@ -1,0 +1,181 @@
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<title>Impedans Expert - {% block title %}{% endblock %}</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dc/2.1.9/dc.min.css" integrity="sha256-WHvgKNpdomdSPf4EGBla0Wx7QZpnZyKAOvuHQcuMHNs=" crossorigin="anonymous" />
+		<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" media="all" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css" />
+		<link rel="stylesheet" type="text/css" href="{% static 'expert/style.css' %}" />
+		<link rel="stylesheet" type="text/css" href="{% static 'css/introjs.min.css' %}" />
+
+		<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="excanvas.min.js"></script><![endif]-->
+
+		<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+		<script>window.jQuery || document.write('<script src="/static/script/jquery-3.2.1.min.js"><\/script>')</script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/file-uploader/5.13.0/fine-uploader.min.js"></script>
+		<!-- Cookies.js, so we can get the CSRFToken cookie -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.min.js" charset="utf-8"></script>
+		<script src="http://d3js.org/d3.v3.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/dc/2.1.9/dc.js"></script>
+
+		<!-- FontAwesome for button styles and icons -->
+		<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+
+		<!-- moment.js for time picker and easy date range object conversion -->
+		<script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+
+		<!-- Include Date Range Picker script and style sheet-->
+		<script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
+		<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+
+		{% block styles %}
+		{% endblock %}
+
+	</head>
+	<body>
+		<div id="wrap">
+
+			<!-- Begin Navbar -->
+
+			<nav class="navbar navbar-expand-sm expert_navbar">
+				<div class="container-fluid">
+					<a class="navbar-brand" href="#"><img src="{% static 'expert/images/impedans_login.png' %}" width="20" height="30" alt=""></a>
+					<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarExpertMenu" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+					<div class="collapse navbar-collapse" id="navbarExpertMenu">
+
+						{% block nav_menu %}
+
+						<ul class="navbar-nav nav-tabs mr-auto">							
+							{% url 'details' as details %}
+							{% url 'expert_upload:File_Upload-add' as file_upload %}
+							{% url 'expert_documents:Document_Upload-add' as documents %}
+							{% url 'expert_import:Parse' as parse_file %}
+							{% url 'expert_algorithms:algorithm_selector' as algorithm_select %}
+							{% url 'expert_algorithms:results_display' as results_display %}
+							{% url 'expert_algorithms:trainer' as trainer %}
+							{% url 'expert:profile' as profile %}
+							{% url 'about' as about %}
+							{% url 'live' as live %}
+
+							<li class="nav-item">
+								<a class="nav-link {% if request.path == home %} active {% endif %}" href={% url 'home' %}>Home{% if request.path == home %} <span class="sr-only">(current)</span>{% endif %}</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link {% if request.path == chambers %} active {% endif %}" href={% url 'chambers' %}>Chambers{% if request.path == chambers %} <span class="sr-only">(current)</span>{% endif %}</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link {% if request.path == sensors %} active {% endif %}" href={% url 'sensors' %}>Sensors{% if request.path == sensors %} <span class="sr-only">(current)</span>{% endif %}</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link {% if request.path == recipes %} active {% endif %}" href={% url 'recipes' %}>Recipes{% if request.path == recipes %} <span class="sr-only">(current)</span>{% endif %}</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link {% if request.path == runs %} active {% endif %}" href={% url 'runs' %}>Runs{% if request.path == runs %} <span class="sr-only">(current)</span>{% endif %}</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link {% if request.path == reports %} active {% endif %}" href={% url 'reports' %}>Reports{% if request.path == reports %} <span class="sr-only">(current)</span>{% endif %}</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link {% if request.path == dashboards %} active {% endif %}" href={% url 'dashboards' %}>Dashboards{% if request.path == dashboards %} <span class="sr-only">(current)</span>{% endif %}</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link {% if request.path == live %} active {% endif %}" href="{{live}}">Live{% if request.path == live %} <span class="sr-only">(current)</span>{% endif %}</a>
+							</li>
+						</ul>
+						<ul class="navbar-nav nav-tabs mr-right">
+
+								{% if request.path == "/expert/details/" %}
+								<li class="nav-item">
+									<a class="btn btn-sm btn-info" role="button" id="help-button" href="javascript:void(0);" onclick="javascript:introJs().start();">Help</a>
+								</li>
+								{% endif %}
+
+								<li class="nav-item">
+									<a class="nav-link {% if request.path == about %} active {% endif %}" href="{{about}}">About{% if request.path == about %} <span class="sr-only">(current)</span>{% endif %}</a>
+								</li>
+							<li class="nav-item dropdown justify-content-end">
+								<a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+									{% if user.is_authenticated %}
+										<span class="caret"> {{ user }}</span>
+									{% else %}
+										<span class="caret"> Log in </span>
+									{% endif %}
+
+								</a>
+
+								{% if user.is_authenticated %}
+
+								<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+									<a class="dropdown-item" href="{% url 'profile' %}">Profile</a>
+									<a class="dropdown-item" href="{% url 'chamber_list' %}">Chamber List</a>
+									<a class="dropdown-item" href="{% url 'sensor_list' %}">Sensor List</a>
+									<a class="dropdown-item" href="{% url 'recipe_list' %}">Recipe List</a>
+									<a class="dropdown-item" href="{% url 'expert_import:runs' %}">Run List</a>
+									<a class="dropdown-item" href="{% url 'chamber-add' %}">Add Chamber</a>
+									<a class="dropdown-item" href="{% url 'sensor-add' %}">Add Sensor</a>
+									<a class="dropdown-item" href="{% url 'logout' %}">Log Out</a>
+									<hr>
+									<a class="dropdown-item" href="{{details}}">Details</a>
+									<a class="dropdown-item" href="{{file_upload}}">Upload Data</a>
+									<a class="dropdown-item" href="{{documents}}">Documents</a>
+									<a class="dropdown-item" href="{{parse_file}}">Parse Files</a>
+									<a class="dropdown-item" href="{{algorithm_select}}">Algorithm Select</a>
+									<a class="dropdown-item" href="{{trainer}}">Training</a>
+									<a class="dropdown-item" href="{{results_display}}">Results</a>
+									<a class="dropdown-item" href="{{live}}">Live</a>
+								</div>
+
+								{% endif %}
+
+							</li>
+						</ul>
+
+						{% endblock %}
+
+					</div>
+				</div>
+			</nav>
+
+			<!-- End Navbar -->
+
+			<main>
+				<div class="container-fluid p-3">
+
+					{% block main_content %}
+					{% endblock %}
+
+				</div>
+			</main>
+		</div>
+
+		<!-- Begin Footer -->
+
+		<div id="footer">
+			<p>Copyright © 2017 <a style="text-decoration: none" href="http://www.impedans.com/">Impedans Ltd.</a> All rights reserved.</p>
+		</div>
+
+		<!-- End Footer -->
+
+		
+		<script src="{% static 'js/intro.min.js' %}"></script>
+		<script src="{% static 'js/project.js' %}"></script>
+		<script src="{% static 'js/graphs.js' %}"></script>
+		
+		{% block end_scripts %}
+		{% endblock %}		
+
+	</body>
+</html>

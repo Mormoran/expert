@@ -1,0 +1,105 @@
+from django import forms
+from datetime import datetime, timezone
+from django.forms import ModelForm, CharField, DateTimeField
+
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from .models import *
+from impedans_expert.expert_upload.models import FileUploadModel as UploadedFile
+from impedans_expert.expert_import.models import Runs, RunProperties
+from django_fine_uploader.forms import FineUploaderUploadForm
+from django_fine_uploader.forms import FineUploaderUploadSuccessForm
+
+
+class SignUpForm(UserCreationForm):
+    first_name = forms.CharField(max_length=30, required=False, help_text='Optional.')
+    last_name = forms.CharField(max_length=30, required=False, help_text='Optional.')
+    email = forms.EmailField(max_length=254, help_text='Required. Inform a valid email address.')
+    company_name = forms.CharField(max_length=30, required=False, help_text='Optional.')
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'company_name')
+
+
+class ChamberForm(ModelForm):
+    chamber_name = forms.CharField(max_length=100, required=True)
+    chamber_type = forms.CharField(max_length=100, required=True)
+
+    class Meta:
+        model = Chamber
+        fields = ['chamber_name', 'chamber_type']
+
+
+class ChamberPropertiesForm(ModelForm):
+    property_name = forms.CharField(max_length=100)
+    property_value = forms.CharField(max_length=100)
+
+    class Meta:
+        model = ChamberProperties
+        fields = ['property_name', 'property_value']
+
+
+class MarkerForm(ModelForm):
+    marker_name = forms.CharField(max_length=100)
+    marker_string = forms.CharField(max_length=100)
+    time = forms.SplitDateTimeField(initial=datetime.now(), required=True, label = "Start Time")
+
+    class Meta:
+        model = Marker
+        fields = ['marker_name', 'marker_string', 'time']
+
+
+class RecipeForm(ModelForm):
+    name = forms.CharField(max_length=255)
+
+    class Meta:
+        model = Recipe
+        fields = ['name']
+
+
+class FileUploadForm(ModelForm):
+    def __init__(self, user, *args, **kwargs):
+        super(FileUploadForm, self).__init__(*args, **kwargs)
+        customer = Customer.objects.filter(user = user)
+        chambers = Chamber.objects.filter(customer=customer)
+        #file_type = forms.ModelChoiceField(queryset=File_Type.objects.filter(customer=customer), empty_label="-")
+        #sensor = forms.ModelChoiceField(queryset=Sensor.objects.filter(chamber__in=chambers), empty_label="-")
+        chamber = forms.ModelChoiceField(queryset=chambers, empty_label="-", required=True)
+
+    class Meta:
+        model = UploadedFile
+        fields = ['chamber']
+
+
+class FineUploaderForm(FineUploaderUploadForm):
+    #This form represents a basic request from Fine Uploader.
+    #The required fields will **always** be sent, the other fields are optional
+    #based on your setup.
+
+    #Extend this if you want to add custom parameters in the body of the POST
+    #request.
+    #sensor = forms.ModelChoiceField(queryset=Sensor.objects.all(), empty_label="-",  required=False)
+    #file_type = forms.ModelChoiceField(queryset=File_Type.objects.all(), empty_label="-",  required=False)
+    chamber = forms.ModelChoiceField(queryset=Chamber.objects.all(), empty_label="-", required=True)
+"""
+class FileTypeForm(forms.Form) :
+    file_type_name=forms.NumberInput()
+    header
+    is_time_absolute
+    time_column
+    time_zone
+    relative_time_cell
+    chamber_column
+    chamber_properties_column
+    marker_column
+    run_column
+    run_properties_column
+    sensor_column
+    frequency_column
+    voltage_column
+    current_column
+    phase_column
+    temerature_column
+
+"""

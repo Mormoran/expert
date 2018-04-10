@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <title>File</title>
+</head>
+<body>
+        <H1>File List</H1>
+        {% if uploadfile_list %}
+        <ul>
+                {%for file in uploadfile_list %}
+                <li>
+                        <p>{{file.name}} - {{file.owner}}</p>
+                </li>
+                {% endfor %}
+        </ul>
+        {% endif %}
+</body>
+</html>
+

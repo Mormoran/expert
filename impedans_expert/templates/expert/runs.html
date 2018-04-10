@@ -1,0 +1,28 @@
+{% extends 'old_base.html' %}
+
+{% block main_content %}
+<H3>Run List</H3>
+{% if run_list %}
+ <table>
+  <tr>
+    <th>Chamber Name</th>
+    <th>Start Time</th>
+    <th>End Time</th>
+	<th>Step Time</th>
+  </tr>
+ {% for run in run_list %}
+   <tr>     
+   	 <td><a href="{% url 'runs' %}">{{run.chamber.chamber_name}}</a></td>
+     <td><a href="{% url 'runs' %}">{{run.start_time}}</a></td>
+	 <td><a href="{% url 'runs' %}">{{run.end_time}}</a></td>
+	 <td><a href="{% url 'runs' %}">{{run.step_time}}</a></td>
+   </tr>
+ {% endfor %}
+ </table>
+{% else %}
+ <p>No Runs added.</p>
+{% endif %}
+
+{% endblock %}
+
+

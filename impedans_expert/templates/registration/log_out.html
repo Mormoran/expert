@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Logged Out{% endblock %}
+
+{% block nav_menu %}
+<ul class="navbar-nav mr-auto">
+<li class="nav-item">
+  <a class="nav-link disabled" href="{% url 'details' %}">Home </a>
+</li>
+</ul>
+<a class="nav-link disabled" href=#>Sign Out</a>
+{% endblock %}
+
+{% block main_content %}
+
+<H1>Logout</H1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Logout</button>
+</form>
+
+{% endblock %}

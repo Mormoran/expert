@@ -1,0 +1,412 @@
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_field %}
+
+{% block styles %}
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/file-uploader/5.13.0/fine-uploader-new.min.css" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="{% static 'expert/style.css' %}" />
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+	<script type="text/template" id="qq-template">
+	{% include "./file_upload_form_entry.html" %}
+	</script>
+{% endblock %}
+
+{% block main_content %}
+
+<div class="modal fade bd-example-modal-lg" id="modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<form class="form-horizontal" id="chamber-form" action="" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				{{ properties_formset.management_form }}
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel">Add Chamber</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<!--Chamber-->
+					<table>
+						<tr>
+							{% for field in chamber_form %}
+								<td>{% crispy_field field %}</td>
+							{% endfor %}
+						</tr>
+					</table>
+					<hr />
+					<!--Chamber Properties-->
+					<table class="new-chamber-properties" id="propertiestable">
+						<script type="text/html" id="property-template">
+							<div id="property-__prefix__">
+								<table>
+									<tr>
+									{% for field in properties_formset.empty_form %}
+										<td>{% crispy_field field %}</td>
+									{% endfor %}
+									</tr>
+								</table>
+							</div>
+						</script>
+						<div id="property-form">
+							<tr>
+								{% for properties_form in properties_formset %}
+									<div id="property-{{ forloop.counter0 }}">
+									</div>
+								{% endfor %}
+							</tr>
+						</div>
+						<tr>
+							<td>
+								<a href="#" id="add-property-button" class="btn btn-outline-primary add-item">Add Properties</a>
+							</td>
+							<td>
+								<a href="#" id="remove-property-button" class="btn btn-outline-danger remove-item">Remove Properties</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button"  class="btn btn-primary" id="chamber-submit">Submit</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<div class="container-fluid">
+	<div class="row" id="card-holder">
+		<div class="col" id="chamber_adder">
+			<div class="card" style="min-width:300px; max-width:400px;">
+				<h3 class="card-header bg-primary text-white">New Chamber</h3>
+				<div class="card-body p-0 text-sm-center">
+					<button class="btn btn-primary" data-toggle="modal" data-target=".bd-example-modal-lg">Add Chamber</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+
+{% block end_scripts %}
+	<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+	<script src='{% static "scripts/jquery.tmpl.min.js"%}'></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/file-uploader/5.13.0/fine-uploader.min.js"></script>
+	<!-- Cookies.js, so we can get the CSRFToken cookie -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.min.js" charset="utf-8"></script>
+	<script>
+	    // template used to create the collapsable chamber upload cards + fineuploader instance
+		$.template('card_temp', '<div class="col"><div class="card" style="min-width:300px; max-width:400px;"><a data-toggle="collapse" href="#chamber${counter}_card" aria-expanded="true" aria-controls="test-block"><h3 class="card-header bg-primary text-white">${chamber_name}</h3></a><div id="chamber${counter}_card" class="collapse"><div class="card-body p-0"><div id="default-concurrent-chunked-uploader-${counter}">Chamber ${counter}</div></div></div></div></div>');
+		var counter = 0;
+		var list_of_cards = [];
+		var list_of_uploaders = [];
+		var added_chambers = false
+		var num_of_cards_already_in_display = 0;
+		var my_filetype_list = [];
+		var my_sensor_list = [];
+		var my_chamber_list = [];
+			
+			// function to create chamber fineuploader instances and card
+			function create_card()
+			{
+				console.log("APPENDING A  CHAMBER CARD");
+				chamber = my_chamber_list[counter];
+				chamber_name = chamber.chamber_name;
+				$.tmpl('card_temp', counter, chamber_name).insertBefore('#chamber_adder');
+				c = counter.toString();
+				var up = "default-concurrent-chunked-uploader-"
+				var uploader_id = up.concat(c);
+				add_file_uploader(uploader_id);
+				counter = counter + 1;
+			}
+
+			// get the file, chamber and sensor information from JSON pages at the urls in each getJSON call
+			function update_list_source()
+			{
+				//get file types
+				$.getJSON('/expert/filetypes',
+					function(data) {
+							my_filetype_list = data;
+							update_lists();
+					} );
+
+				//get sensor list
+				$.getJSON('/expert/sensors',
+					function(data) {
+							my_sensor_list = data;
+							update_lists();
+					} );
+
+				//get chamber list
+				$.getJSON('/expert/chambers',
+					function(data) {
+							my_chamber_list = data;
+
+							process_chambers(my_chamber_list.length);
+							//update_lists();
+							console.log("Source list finished");
+                                                        added_chambers = true;
+					} );
+                       
+			}
+			
+			function update_params(uploader, uploader_index)
+			{
+				var params={};
+				params['chamber'] = my_chamber_list[uploader_index].id;
+				//params['sensor'];
+				//params['file_type'];
+
+				uploader.setParams(params)
+			}
+			
+			function update_lists(id)
+			{
+				if( arguments.length == 1 )
+				{
+					var elements = default_concurrent_chunked_uploader.getItemByFileId(id).getElementsByTagName("select");
+				}
+				else
+				{
+					var elements = document.getElementsByTagName("select");
+				}
+
+				for(var i = 0; i < elements.length; i++)
+				{
+					if (elements.item(i).name=="file_type")
+					{
+						elements.item(i).options.length=0;
+						var objOption = document.createElement("option");
+						objOption.text = "---";
+						objOption.value = "";
+						elements.item(i).add(objOption);
+						for (var j=0;j<my_filetype_list.length; j++)
+						{
+							var objOption = document.createElement("option");
+							objOption.text = my_filetype_list[j].name;
+							objOption.value = my_filetype_list[j].id;
+							elements.item(i).add(objOption);
+						}
+					}
+					if (elements.item(i).name=="sensor")
+					{
+						console.log(elements.item(i).name);
+						elements.item(i).options.length=0;
+						var objOption = document.createElement("option");
+						objOption.text = "---";
+						objOption.value = "";
+						elements.item(i).add(objOption);
+						for (var j=0;j<my_sensor_list.length; j++)
+						{
+							var objOption = document.createElement("option");
+							objOption.text = my_sensor_list[j].serial_number;
+							objOption.value = my_sensor_list[j].id;
+							elements.item(i).add(objOption);
+						}
+					}
+					if (elements.item(i).name=="chamber")
+					{
+						console.log(elements.item(i).name);
+						elements.item(i).options.length=0;
+						var objOption = document.createElement("option");
+						objOption.text = "---";
+						objOption.value = "";
+						elements.item(i).add(objOption);
+						for (var j=0;j<my_chamber_list.length; j++)
+						{
+							var objOption = document.createElement("option");
+							objOption.text = my_chamber_list[j].chamber_name;
+							objOption.value = my_chamber_list[j].id;
+							elements.item(i).add(objOption);
+						}
+					}
+
+				}
+			}
+
+			// create a fine uploader instance
+			function add_file_uploader(uploader_id)
+			{
+			  list_of_uploaders.push(new qq.FineUploader({
+  			    debug: true,
+			    element: document.getElementById(uploader_id),
+			    request: {
+			      endpoint: "{% url 'expert_upload:Uploader-add' %}",
+			      customHeaders: {
+			        'X-CSRFToken': Cookies.get('csrftoken')
+			      }
+			    },
+			    autoUpload: false,
+			    chunking: {
+		  	      enabled: true,
+			      concurrent: {
+			        enabled: true
+			      },
+			      success: {
+			        endpoint: "{% url 'expert_upload:Uploader-add' %}?done"
+			      }
+			    },
+			    callbacks: {
+			      onSubmitted: function(id, name){update_lists(id);}
+			    }
+			  }));
+			  uploader_index = list_of_uploaders.length - 1;
+			  update_params(list_of_uploaders[uploader_index], uploader_index);
+			}
+
+			update_list_source();
+
+			var num_of_uploaders = 0;
+
+			//maintain and create chambers on the page
+			function process_chambers(num_of_chambers)
+			{
+							// if a new chamber has been added to the customer account from the add chamber modal
+							// append it the list
+	                        if (added_chambers == true)
+        	                {
+                		         my_chamber_list.push(my_chamber_list.shift());
+        	                }
+				// keep track of the count of fineuploader instances 
+				num_of_uploaders = num_of_chambers;
+				var i = 0;
+				for( i=0; i < num_of_uploaders; i++)
+				{
+					// if the number of uploaders greater than the number of chamber cards in the display 
+					// create a new card
+					if(i >= num_of_cards_already_in_display)
+					{
+					    // call function to create a new card
+						create_card();
+						var id = i.toString();
+						var upload_id = "default-concurrent-chunked-uploader-" + id;
+						var uploader_div = document.getElementById(upload_id);
+						for(var j = 0; j < uploader_div.childNodes.length; j++)
+						{
+							var above_buttons_node = uploader_div.childNodes.item(j);
+							for(var k = 0; k < above_buttons_node.childNodes.length; k++)
+							{
+								var buttons_node = above_buttons_node.childNodes.item(k);
+								for(var l = 0; l < buttons_node.childNodes.length; l++)
+								{
+									var button_string = buttons_node.childNodes.item(l).innerHTML;
+									button_string = button_string + "hiisdfbsa"
+									button_index = button_string.indexOf("Upload");
+									if (button_index > -1)
+									{
+										var submit_button = buttons_node.childNodes[l];
+										var newID = submit_button.id + i.toString();
+										document.getElementById(submit_button.id).id = newID;
+										qq(document.getElementById(newID)).attach("click", function(el, ev) {
+											var thenum = el.srcElement.id.replace( /^\D+/g, '');
+											var num = parseInt(thenum)
+											console.log(thenum);
+											list_of_uploaders[num].uploadStoredFiles();
+										});
+									}
+								}
+							}
+						}
+						num_of_cards_already_in_display = num_of_cards_already_in_display+1;
+					}
+				}
+				console.log("CHAMBERS CREATED");
+			}
+	</script>
+
+	<script>
+		// creates the default chamber property forms in the add chamber modal
+		function setDefaultProperties()
+		{
+				for(var i = 0; i < 4; i++)
+				{
+					// get the HTML contents of the 1st element in the set of matched elements
+					var tmplMarkup = $('#property-template').html();
+					var compiledTmpl = tmplMarkup.replace(/__prefix__/g, i);
+					$('div#property-form').append(compiledTmpl);
+					// update form count
+					$('#id_form-TOTAL_FORMS').attr('value', i+1);
+				}
+				document.getElementById("id_form-0-property_name").value = "Process";
+				document.getElementById("id_form-1-property_name").value = "Type";
+				document.getElementById("id_form-2-property_name").value = "Model";
+				document.getElementById("id_form-3-property_name").value = "Electrode Diameter";
+				document.getElementById("card-loaded").style.visibility = "visible";
+		}
+		$(document).ready(setDefaultProperties());
+
+	</script>
+
+	<script>
+		// submit a new chamber
+		$("#chamber-submit").click(function()
+		{
+				$.post("{% url 'expert_upload:File_Upload-add' %}", $("#chamber-form").serialize(), function(data) {
+						update_list_source();
+						$('#modal').modal('toggle');
+						$('#chamber-form')[0].reset();
+						$('#property-form').empty();
+						$('.modal-backdrop').remove();
+						setDefaultProperties();
+				}).done();
+		});
+	</script>
+
+	<script>
+		// add another chamber property form to the modal
+		$(document).ready(function()
+		{
+			$('.add-item').click(function(ev)
+			{
+				ev.preventDefault();
+				var count = $('#property-form').children().length;
+				console.log(count)
+				var tmplMarkup = $('#property-template').html();
+				var compiledTmpl = tmplMarkup.replace(/__prefix__/g, count);
+				$('div#property-form').append(compiledTmpl);
+				// update form count
+				$('#id_form-TOTAL_FORMS').attr('value', count+1);
+				// some animate to scroll to view our new form
+				$('html, body').animate({scrollTop: $("#add-property-button").position().top-200}, 800);
+			});
+		});
+	</script>
+
+	<script>
+		$(document).ready(function()
+		{
+			// remove a run property form
+			$('.remove-item').click(function(ev)
+			{
+				ev.preventDefault();
+				var count = $('#property-form').children().length;
+				console.log(count);
+				if (count > 0)
+				{
+					var successCount = count - 1;
+					console.log(successCount);
+					var formlist = $('#property-form')[0];
+					while(count > successCount)
+					{
+						var childNode = formlist.lastChild;
+						formlist.removeChild(childNode);
+						count = $('#property-form').children().length;
+					}
+					// update form count
+					$('#id_form-TOTAL_FORMS').attr('value', count);
+					// some animate to scroll to view our new form
+					$('html, body').animate({scrollTop: $("#remove-property-button").position().top-200}, 800);
+				}
+			});
+		});
+	</script>
+
+
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+
+{% endblock %}
+

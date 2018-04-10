@@ -1,0 +1,116 @@
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_filters %}
+
+{% block title %}
+Recipes Overview
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.css">
+{% endblock %}
+
+{% block main_content %}
+
+<div id="createChamber" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form class="form-horizontal" id="chamber-form" action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="valueModalTitle">New Chamber</h3>
+                </div>
+                <div class="modal-body">
+                    {% crispy recipe_form %}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-2 p-1 ">
+        <div class="card">
+            <h3 class="card-header bg-danger text-white text-center banner">
+                Recipe Filter
+            </h3>
+            <div id="searchBox" class="card-body p-2 text-center mx-auto">
+                <h5>Filter by Recipe</h5>
+                <div id="filterRecipe"></div>
+                <hr>
+                <h5>Filter by Description</h5>
+                <div id="filterDescription"></div>
+                <hr>
+                <h5>Filter by Property</h5>
+                <div id="filterProperty"></div>
+                <hr>
+                <h5>Filter by Value</h5>
+                <div id="filterValue"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-10 p-1">
+        <div class="card">
+            <div class="card-header text-white text-center p-2 banner">
+                <div class="floatLeft">
+                    <a href="" data-toggle="modal" data-target="#createChamber"><i class="fas fa-plus-square"></i></a>
+                </div>
+                <h3>Recipes List</h3>
+            </div>
+            <div class="card-body p-0">
+                <table id="dataTable" class="table table-striped display compact">                    
+                    <thead>
+                        <tr class="table-active">
+                            <th>Recipe</th>
+                            <th>Description</th>
+                            {% for property in properties_list %}
+                                <th>{{property.property_name}}</td>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th id="Recipe">Recipe</th>
+                            <th id="Description">Description</th>
+                            <th id="Property">Property</th>
+                            <th id="Value">Value</th>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        {% for recipe in recipes_list %}
+                            <tr>
+                                <td><a href="{% url 'recipe' recipe.id %}">{{recipe}}</a></td>
+                                <td>{{recipe.description}}</td>
+                                {% for property in properties_list %}
+                                    <td>{{property.property_value}}</td>
+                                {% endfor %}
+                            </tr>
+                        {% empty %}
+                            <div class="card-block p-1 text-center mx-auto">
+                                <hr>
+                                <h3>No recipes created yet.</h3>
+                                <hr>
+                                <button class="btn btn-secondary banner new-obj-button" id="create-recipe" data-id="value" data-toggle="modal" data-target="#createRecipe">Create New Recipe</button>
+                            </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>    
+</div>
+{% endblock %}
+
+{% block end_scripts %}
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script src="{% static 'js/filter.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        $('#Recipe').appendTo('#filterRecipe');
+        $('#Description').appendTo('#filterDescription');
+        $('#Property').appendTo('#filterProperty');
+        $('#Value').appendTo('#filterValue');
+    });
+</script>
+{% endblock %}

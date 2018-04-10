@@ -1,0 +1,99 @@
+{% extends 'old_base.html' %}
+{% load staticfiles %}
+{% load crispy_forms_filters %}
+
+{% block styles %}
+  <link rel="stylesheet" type="text/css" href="{% static 'expert/style.css' %}" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" media="all" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css" rel="stylesheet" />
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+
+{% endblock %}
+
+{% block main_content %}
+
+<div class="details_card_size">
+    <div class="card">
+        <a data-toggle="collapse" href="#result_form_1" aria-expanded="true" aria-controls="test$-block">
+            <h2 class="card-header">Run Filter</h2>
+        </a>
+        <div class="collapse" id="result_form_1">
+            <div class="algorithm_select_card_body">
+              <form class="form-horizontal" id="result_form" action="" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  {{ filter_form|crispy }}
+                  <button type="submit" class="btn btn-primary">Submit</button>
+              </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="details_card_size">
+    <div class="card">
+        <h3 class="card-header bg-primary text-white">
+        Runs List
+        </h3>
+        <div class="card-body p-0">
+          {% if run_list %}
+          <table class="table .table-hover">
+            <tr class="table-active">
+              <th>Chamber Name</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Step Time</th>
+            </tr>
+            {% for run in run_list %}
+            <tr>     
+   	      <td><a href="{% url 'chamber' run.chamber.id %}">{{run.chamber.chamber_name}}</a></td>
+              <td><a href="{% url 'expert_import:run' run.id %}">{{run.start_time}}</a></td>
+	      <td><a href="{% url 'expert_import:run' run.id %}">{{run.end_time}}</a></td>
+	      <td><a href="{% url 'expert_import:run' run.id %}">{{run.step_time}}</a></td>
+            </tr>
+            {% endfor %}
+          </table>
+          {% else %}
+            <p>No Runs added.</p>
+          {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block end_scripts %}
+
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src='{% static "scripts/jquery.tmpl.min.js"%}'></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.min.js" charset="utf-8"></script>
+
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.dateinput').datepicker({dateFormat: "yy-mm-dd"});
+    });
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.timeinput').timepicker({
+           timeFormat: "HH:mm:ss.sss",
+           interval: 5,
+           dynamic: true,
+           dropdown: true,
+           scrollbar: true
+        });
+    });
+</script>
+
+{% endblock %}
+

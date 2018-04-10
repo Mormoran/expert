@@ -1,0 +1,48 @@
+{% extends 'old_base.html' %}
+
+{% block main_content %}
+<div class="card">
+	<h3 class="card-header bg-primary text-white">
+		Profile
+	</h3>
+	<div class="card-body p-0">
+		<table class="table table-hover">
+			<tr class="table-active">
+				<th>Company</th>
+				<th>Contact</th>
+				<th>Email</th>
+				<th>Number of Chambers</th>
+			</tr>
+			<tr>
+				<td>{{customer.company_name}}</td>
+				<td>{{customer.contact_name}}</td>
+				<td>{{customer.contact_email}}</td>
+				<td>{{customer.chamber_set.count}}</td>
+			</tr>
+		</table>
+	</div>
+</div>
+<hr>
+<div class="card">
+	<h3 class="card-header bg-primary text-white">
+		Chambers
+	</h3>
+	<div class="card-body p-0">
+		<table class="table table-hover">
+			<tr class="table-active">
+				<th>Name</th>
+				<th>Type</th>
+				<th>Runs</th>
+			</tr>
+			<tr>
+				{% for chamber in customer.chamber_set.all %}
+				<tr>
+					<td><a href="{% url 'customers' %}">{{chamber.chamber_name}}</a></td>
+					<td><a href="{% url 'customers' %}">{{chamber.runs_set.count}}</a></td>
+				</tr>
+			{% endfor %}
+			</tr>
+		</table>
+	</div>
+</div>
+{% endblock %}

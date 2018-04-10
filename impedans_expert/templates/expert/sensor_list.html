@@ -1,0 +1,32 @@
+{% extends 'old_base.html' %}
+
+{% block main_content %}
+
+
+<div class="details_card_size" style="width:40%">
+    <div class="card">
+        <h3 class="card-header bg-primary text-white">
+        Sensor List
+        </h3>
+        <div class="card-body p-0">
+            {% if sensor_list %}
+             <table  class="table .table-hover">
+              <tr class="table-active">
+                <th>Sensor Serial Number</th>
+              </tr>
+             {% for sensor in sensor_list %}
+               <tr>
+                 <td>{{sensor.serial_number}}</td>
+               </tr>
+             {% endfor %}
+             </table>
+            {% else %}
+             <p>No Sensors added.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+

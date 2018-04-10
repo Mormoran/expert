@@ -1,0 +1,58 @@
+from django.conf.urls import include, url
+from django.contrib.auth import views as auth_views
+from django.contrib import admin
+from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import reverse_lazy
+from django.views import defaults as default_views
+from django.views.generic import TemplateView, RedirectView
+
+from impedans_expert.expert import views
+
+urlpatterns = [
+    #url(r'^signup/$', views.signup, name='signup'),
+    url(r'^login/$', auth_views.login, name='account_login'),
+    url(r'^logout/$', login_required(auth_views.logout), {'next_page': 'account_login'}, name='logout'),
+    url(r'^$', login_required(views.DetailsView.as_view()), name='home'),
+    url(r'^details/$', login_required(views.DetailsView.as_view()), name='details'),
+    url(r'^profile/$', login_required(views.ProfileView.as_view()), name='profile'),
+    url(r'^about/$', views.AboutView.as_view(), name='about'),
+    url(r'^live/$', login_required(views.LiveView.as_view()), name='live'),
+
+    # url(r'^(?P<customer_id>[0-9]+)/$', views.customers, name='customers'),
+    url(r'^customer/$', login_required(views.CustomerView.as_view()), name='customers'),
+    url(r'^chamberinfo/(?P<chamber_id>[0-9]+)/$', login_required(views.ChamberInfoView.as_view()), name='chamber'),
+
+    url(r'^parameters/$', login_required(views.ParameterView.as_view()), name='parameters'),
+    url(r'^sensorlist/$', login_required(views.SensorListView), name='sensor_list'),
+    url(r'^chamberlist/$', login_required(views.ChamberListView), name='chamber_list'),
+    url(r'^recipelist/$', login_required(views.RecipeListView.as_view()), name='recipe_list'),
+
+    # url(r'^customer/add/$', login_required(views.CustomerCreate.as_view()), name='customer-add'),
+    url(r'^chamber/add/$', login_required(views.chamberCreate), name='chamber-add'),
+    url(r'^sensor/add/$', login_required(views.SensorCreate.as_view()), name='sensor-add'),
+    url(r'^sensors/(?P<sensor_id>[0-9]+)/$', login_required(views.SensorInfoView.as_view()), name='sensor'),
+
+    url(r'^api/', include('expert_import.api.urls', namespace='import_api')),
+    url(r'^api/', include('expert.api.urls', namespace='expert_api')),
+    url(r'^api/', include('expert_algorithms.api.urls', namespace='algorithms_api')),
+    url(r'^api/', include('users.api.urls', namespace='users_api')),
+
+    # url(r'^sensors/$', login_required(views.sensors), name='Sensors'),
+    # url(r'^chambers/$', login_required(views.chambers), name='Chambers'),
+    url(r'^files/$', login_required(views.files), name='Files'),
+    url(r'^filetypes/$', login_required(views.filetypes), name='FileTypes'),
+
+    url(r'^home/$', login_required(views.HomeView.as_view()), name='home'),
+    url(r'^chambers/$', login_required(views.ChambersView.as_view()), name='chambers'),
+    url(r'^sensors/$', login_required(views.SensorsView.as_view()), name='sensors'),
+    url(r'^sensors_live/(?P<sensor_id>[0-9]+)/$', login_required(views.SensorLiveValues), name='live_values'),
+
+    url(r'^recipes/$', login_required(views.RecipesView.as_view()), name='recipes'),
+    url(r'^recipes/(?P<recipe_id>[0-9]+)/$', login_required(views.RecipeInfoView.as_view()), name='recipe'),
+    url(r'^recipes/(?P<recipe_id>[0-9]+)/algorithm_(?P<slug>[\w-]+)/$', login_required(views.RecipeConfigView.as_view()), name='recipe_config'),
+    url(r'^recipes/(?P<recipe_id>[0-9]+)/(?P<stream_algorithm_id>[0-9]+)_algorithm_(?P<slug>[\w-]+)/baselines$', login_required(views.BaselineConfigView.as_view()), name='baseline_config'),
+
+    url(r'^runs/$', login_required(views.RunsView.as_view()), name='runs'),
+    url(r'^reports/$', login_required(views.ReportsView.as_view()), name='reports'),
+    url(r'^dashboards/$', login_required(views.DashboardsView.as_view()), name='dashboards'),
+]

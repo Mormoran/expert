@@ -1,0 +1,25 @@
+{% extends 'old_base.html' %}
+
+{% block main_content %}
+	<H1>Customer List</H1>
+	{% if customer_list %}
+		<table>
+			<tr>
+				<th>Company</th>
+				<th>Contact</th>
+				<th>Email</th>
+				<th>Number of Chambers</th>
+			</tr>
+			{% for customer in customer_list %}
+				<tr>
+					<td><a href="{% url 'customers' customer.id %}">{{customer.company_name}}</a></td>
+					<td><a href="{% url 'customers' customer.id %}">{{customer.contact_name}}</a></td>
+					<td><a href="{% url 'customers' customer.id %}">{{customer.contact_email}}</a></td>
+					<td><a href="{% url 'customers' customer.id %}">{{customer.chamber_set.count}}</a></td>
+				</tr>
+			{% endfor %}
+		</table>
+	{% else %}
+		<p>No Customers added.</p>
+	{% endif %}
+{% endblock %}
