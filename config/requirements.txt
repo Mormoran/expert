@@ -31,7 +31,7 @@ django-polymorphic==1.0.2
 django-redis==4.8.0
 django-tellme==0.6.3
 django-test-plus==1.0.18
-djangorestframework==3.7.1
+djangorestframework==3.11.2
 docutils==0.14
 easy-thumbnails==2.3
 factory-boy==2.9.2
